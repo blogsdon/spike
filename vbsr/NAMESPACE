@@ -1,2 +1,0 @@
-useDynLib("vbsr")
-export(compute_KL,vbsr)

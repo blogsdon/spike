@@ -1,0 +1,27 @@
+########vbsr project task list, August 17, 2013
+
+0) Rename vbsr_net to vbsr DONE!
+1) Add bonf_l0 parameter (e.g. Bonferroni-95% probability in model) DONE!
+2) Get rid of path length input parameter DONE!
+3) Add posterior probability to output DONE!
+4) Get rid of needless output DONE!
+5) Change regression to family (e.g. linear/logistic -> normal/binomial) DONE!
+6) Fix cross validation function REMOVED!
+7) Git rid of plotting functions DONE!
+7) Fill out all documentation DONE!
+8) Update vignette to include new functionality DONE!
+9) Run tests to make sure it passes all of the functionality metrics
+
+#########task list, December 7 2015
+1) implement an r version of the stochastic EM algorithm (stochasticEMSpike.R)
+  a) write skeleton of function DONE
+  b) write update beta function DONE
+  c) write update alpha function DONE
+  d) write update sigma funciton DONE
+  e) write update log likelihood function DONE
+  f) test all functions DONE
+  g) TeX derivations
+2) run diagnostic tests comparing to c algorithm
+3) implement an r version of variational Bayes algorithm
+4) run diagnostic tests comparing to c algorithm
+5) write a c version of stochastic EM algorithm

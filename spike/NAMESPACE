@@ -1,0 +1,2 @@
+useDynLib("spike")
+export(compute_KL,vbsr,stochasticEMSpike)

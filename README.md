@@ -1,2 +1,2 @@
-# vbsr
-Official repository of the Variational Bayes Spike Regression R package.
+# spike
+An R package oriented code base for developing new spike algorithms
