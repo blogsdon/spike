@@ -21,7 +21,6 @@
   e) write update log likelihood function DONE
   f) test all functions DONE
   g) TeX derivations
-2) run diagnostic tests comparing to c algorithm
-3) implement an r version of variational Bayes algorithm
-4) run diagnostic tests comparing to c algorithm
-5) write a c version of stochastic EM algorithm
+2) implement an r version of variational Bayes algorithm
+3) run diagnostic tests comparing to c algorithm
+4) write a c version of stochastic EM algorithm
