@@ -57,6 +57,8 @@ vbsrR <- function(y,
     #variable to track vsums
     modelState$vsums <- 0
     
+    modelState$vsums_correct <- 0
+    
     #variable to track entropy
     modelState$entropy <- 0
     
@@ -73,7 +75,7 @@ vbsrR <- function(y,
     modelState$l0 <- l0
     
     #lower bound on marginal log likelihood
-    modelState$lb <- 0
+    modelState$lowerBound <- 0
     
     #residual vector
     modelState$residuals <- y
@@ -106,7 +108,7 @@ vbsrR <- function(y,
     modelState$eps <- eps
     
     #need to transform l0 into pbeta
-    modelState$pbeta <- 1/(1+exp(-0.5*modelState$l0))
+    modelState$pbetaParam <- 1/(1+exp(-0.5*modelState$l0))
 
     #return model state    
     return(modelState)
@@ -116,6 +118,7 @@ vbsrR <- function(y,
   updateBeta <- function(modelState){
     for (j in 1:modelState$m){
       #muj - mean estimate
+      
       muj <- t(modelState$x[,j])%*%modelState$residuals
       
       muj <- muj + modelState$ebeta[j]*modelState$xSumSquares[j]
@@ -152,11 +155,11 @@ vbsrR <- function(y,
       modelState$vsums_correct <- modelState$vsums_correct + (ebetaj^2-ebetajsq)*modelState$xSumSquares[j]
   
       #update residuals
-      modelState$residuals <- modelState$residuals + modelState$x[,j]*(modelState$beta[j]-betaj)
+      modelState$residuals <- modelState$residuals + modelState$x[,j]*(modelState$ebeta[j]-ebetaj)
       
       #set beta paramters
-      modelState$ebeta[j] <- betaj
-      modelState$ebetasq[j] <- betajsq
+      modelState$ebeta[j] <- ebetaj
+      modelState$ebetasq[j] <- ebetajsq
       modelState$betamu[j] <- muj
       modelState$betasigma[j] <- sigmaj
       modelState$pbeta[j] <- pj
@@ -200,8 +203,8 @@ vbsrR <- function(y,
   updateLowerBound <- function(modelState){
     
     lowerBound <- -0.5*modelState$n*(log(2*pi*modelState$sigma)+1)
-    lowerBound <- lowerBound + log(modelState$pbeta)*modelState$psums
-    lowerBound <- lowerBound + log(1-modelState$pbeta)*(modelState$m - modelState$psums)
+    lowerBound <- lowerBound + log(modelState$pbetaParam)*modelState$psums
+    lowerBound <- lowerBound + log(1-modelState$pbetaParam)*(modelState$m - modelState$psums)
     lowerBound <- lowerBound + modelState$entropy
     
     modelState$lowerBound <- lowerBound
@@ -210,10 +213,14 @@ vbsrR <- function(y,
   }
   
   
-  modelState <- initializeModelState(n,m,p,l0,burnIn,capture,captureFreq,y,x,z)
+  modelState <- initializeModelState(n,m,p,l0,eps,y,x,z)
   lbold <- -Inf
-  while(abs(modelState$lb-lbold) > modelState$eps ){
+  while(abs(modelState$lowerBound-lbold) > modelState$eps ){
     
+    modelState$psums <- 0
+    modelState$vsums_correct <- 0
+    modelState$entropy <- 0
+    lbold <- modelState$lowerBound
     #update coefficient distribution
     modelState <- updateBeta(modelState)
     
