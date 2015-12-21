@@ -104,6 +104,9 @@ vbsrR <- function(y,
     
     #tolerance to assess convergence to a local maximum
     modelState$eps <- eps
+    
+    #need to transform l0 into pbeta
+    modelState$pbeta <- 1/(1+exp(-0.5*modelState$l0))
 
     #return model state    
     return(modelState)
@@ -181,7 +184,11 @@ vbsrR <- function(y,
   #function to update the error parameters
   updateError <- function(modelState){
     #generate estimate of error variance
-    sigma <- sum(modelState$residuals^2)/modelState$n
+    #sigma <- sum(modelState$residuals^2)/modelState$n
+    sigma <- t(modelState$residuals)%*%modelState$residuals
+    sigma <- sigma - modelState$vsums_correct
+    sigma <- sigma/modelState$n
+    
     
     #set current state to new estimate
     modelState$sigma <- sigma
@@ -190,12 +197,14 @@ vbsrR <- function(y,
   }
   
   #function to update the likelihood parameters
-  updateLogLikelihood <- function(modelState){
-    #temporarily going to use just the log likelihood instead of full log posterior
+  updateLowerBound <- function(modelState){
     
-    logLikelihood <- -0.5*modelState$n*(log(2*pi*modelState$sigma)+1)
+    lowerBound <- -0.5*modelState$n*(log(2*pi*modelState$sigma)+1)
+    lowerBound <- lowerBound + log(modelState$pbeta)*modelState$psums
+    lowerBound <- lowerBound + log(1-modelState$pbeta)*(modelState$m - modelState$psums)
+    lowerBound <- lowerBound + modelState$entropy
     
-    modelState$logLikelihood <- logLikelihood
+    modelState$lowerBound <- lowerBound
     
     return(modelState)
   }

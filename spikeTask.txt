@@ -24,11 +24,13 @@
 2) implement an r version of variational Bayes algorithm
   a) write update beta function DONE
   b) write udpate alpha function DONE
-  c) write update sigma function
-  d) write update lower bound function
-  e) fix various pieces so that it syncs up with c version
+  c) write update sigma function DONE
+  d) write update lower bound function DONE
   f) test to be sure that it works
   g) TeX derivations migrate to new overall tex document of all derivations
 3) run diagnostic tests comparing vbsr r and c algorithm
+3) fix vbsr algorithm...
 4) write a c version of stochastic EM algorithm
 5) run diagnostic tests comparing SEMS r and c algorithms
+6) derive a spike random effects test (for use in the stochastic em algorithm)
+7) put together joint vbsr + stochastic em algorithm, show that it improves results in terms of computation time
