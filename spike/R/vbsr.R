@@ -555,7 +555,7 @@ vbsr = function(y,
         result_list2$pval[signif] <- pt(abs(result_list2$z[signif]),nrow(X)-ncol(X[,-wexc][,signif])-1,lower.tail=FALSE)*2;
       }
     }
-    return(result_list2);
+    return(result_list);
 	}else{
     result_list2 <- list();
     result_list2$beta <- result_list$e_beta[-wexc,];
@@ -577,6 +577,6 @@ vbsr = function(y,
       result_list2$kl_se <- result_list$kl_se;
     }
         
-    return(result_list2)
+    return(result_list)
 	}
 }
