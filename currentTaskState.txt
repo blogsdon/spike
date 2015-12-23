@@ -1,6 +1,6 @@
 December 22, 2015
 Working on the harmonization of vbsr and vbsrR.  Brainstorming ways in which to compare the states.  Currently they are similar but not producing the exact same results for the same simulated data set.
-1) Fix the lower bound function in original vbsr
+1) Fix the lower bound function in original vbsr (still working on this)
 2) Harmonize initial conditions
 3) Track the updates of each state parameter and see where they diverge.
 4) Go through each set of updates by hand

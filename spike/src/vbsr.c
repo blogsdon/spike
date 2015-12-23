@@ -1,5 +1,5 @@
 //variational Bayes spike regression (vbsr) R package C library
-//Copyright 2013 Benjamin A Logsdon
+//Copyright 2015 Benjamin A Logsdon
 #include "vbsr.h"
 
 

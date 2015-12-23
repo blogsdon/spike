@@ -170,7 +170,7 @@ vbsr = function(y,
 			beta_mu,
 			beta_sigma,
 			beta_p,
-			lb1,PACKAGE="vbsr");
+			lb1,PACKAGE="spike");
 	
 	wexc <- which(exclude==1);
 
@@ -318,7 +318,7 @@ vbsr = function(y,
 			as.double(lb_mat),
 			as.double(kl_mat),
 			as.integer(nthreads),
-			PACKAGE="vbsr"),silent=TRUE);
+			PACKAGE="spike"),silent=TRUE);
 		if(length(result)==0&&path_length>1){
 			#rm(result);
 			#gc();
