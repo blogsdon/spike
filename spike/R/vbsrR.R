@@ -202,15 +202,15 @@ vbsrR <- function(y,
   #function to update the likelihood parameters
   updateLowerBound <- function(modelState){
     
-    print("there")
+    #print("there")
     lowerBound <- -0.5*modelState$n*(log(2*pi*modelState$sigma)+1)
-    print(lowerBound)
+    #print(lowerBound)
     lowerBound <- lowerBound + log(modelState$pbetaParam)*modelState$psums
-    print(lowerBound)
+    #print(lowerBound)
     lowerBound <- lowerBound + log(1-modelState$pbetaParam)*(modelState$m - modelState$psums)
-    print(lowerBound)
+    #print(lowerBound)
     lowerBound <- lowerBound + modelState$entropy
-    print(lowerBound)
+    #print(lowerBound)
     modelState$lowerBound <- lowerBound
     
     return(modelState)
@@ -227,7 +227,7 @@ vbsrR <- function(y,
     lbold <- modelState$lowerBound
     #update coefficient distribution
     modelState <- updateBeta(modelState)
-    cat('entropy:',modelState$entropy,'\n')
+    #cat('entropy:',modelState$entropy,'\n')
     
     #update fixed covariate effect distribution
     modelState <- updateAlpha(modelState)

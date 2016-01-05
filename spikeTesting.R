@@ -9,7 +9,7 @@ beta <- rep(0,m)
 beta[tbeta]<- rnorm(ntrue,0,2)
 y <- X%*%beta+e
 set.seed(1)
-resC<- spike::vbsr(y,scale(X),family='normal',n_orderings=1,eps = 1e-8)
+resC<- spike::vbsr(y,scale(X),family='normal',n_orderings=1,eps = 1e-8,scaling = F)
 resR <- spike::vbsrR(y=y,x=scale(X),eps=1e-8,l0 = resC$l0)
-resC$e_beta[-1][1:5]
-resR$ebeta[1:5]
+resC$e_beta[-1][1:4]
+resR$ebeta[1:4]
