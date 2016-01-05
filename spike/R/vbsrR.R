@@ -143,7 +143,7 @@ vbsrR <- function(y,
       modelState$psums <- modelState$psums + pj
       
       #entropy
-      if(pj > 1e-10){
+      if(pj > 1-1e-10){
         modelState$entropy <- modelState$entropy - pj*log(pj) + (1-pj) + 0.5*pj*log(2*exp(1)*pi*sigmaj)
       }else if (pj < 1e-10){
         modelState$entropy <- modelState$entropy + pj - (1-pj)*log(1-pj) + 0.5*pj*log(2*exp(1)*pi*sigmaj)
