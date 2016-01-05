@@ -688,8 +688,10 @@ void update_beta(struct model_struct * model, int i, int j){
 				} else {
 					me(model,i,j)->entropy = me(model,i,j)->entropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*3.14159*sigma);
 				}
-				me(model,i,j)->v_sums_correct = me(model,i,j)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
-					
+				if(exc!=0){
+				  me(model,i,j)->v_sums_correct = me(model,i,j)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
+				}
+				
 				daxpy_w(model->data.n,xc(model,k),me(model,i,j)->resid_vec,me(model,i,j)->e_beta[k]-e_b);
 
 				me(model,i,j)->beta_mu[k] = mu;
@@ -905,8 +907,8 @@ void update_error(struct model_struct * model, int i, int j){
 			ddot_w(model->data.n,me(model,i,j)->resid_vec,me(model,i,j)->resid_vec,&U);
 			U = U - me(model,i,j)->v_sums_correct;
 			U = U/nd;
-			//me(model,i,j)->sigma_e = U;
-      me(model,i,j)->sigma_e = 1.0;
+			me(model,i,j)->sigma_e = U;
+      //me(model,i,j)->sigma_e = 1.0;
                         //Rprintf("no segfault\n");
 			if(!R_FINITE(U)){
 				free_model(model);
