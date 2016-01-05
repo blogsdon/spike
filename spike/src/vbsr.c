@@ -186,7 +186,6 @@ double compute_ssq(double *vec,int n){
 void process_data(struct model_struct * model){
 	int j;
 	double nd = ((double) model->data.n);
-
 	switch(model->control_param.scaleType){
 
 		case SCALE:
@@ -196,7 +195,7 @@ void process_data(struct model_struct * model){
 				if(j>0){
 					scale_vector(xc(model,j),model->data.one_vec,model->data.n);
 				}
-				model->data.x_sum_sq[j] = nd;
+				model->data.x_sum_sq[j] = nd - 1;
 			}
 			break;
 
@@ -660,7 +659,7 @@ void update_beta(struct model_struct * model, int i, int j){
 				//Rprintf("exc: %d\n",exc);
 				ddot_w(model->data.n,xc(model,k),me(model,i,j)->resid_vec,&mu);
 				//Rprintf("mu: %g\n",mu);
-				Rprintf("xumsq: %g, k: %d\n",model->data.x_sum_sq[k],k);
+				//Rprintf("xumsq: %g, k: %d\n",model->data.x_sum_sq[k],k);
 				mu = mu + (model->data.x_sum_sq[k])*(me(model,i,j)->e_beta[k]);
 				//Rprintf("mu: %g\n",mu);
 				mu = mu/model->data.x_sum_sq[k];
@@ -907,12 +906,12 @@ void update_error(struct model_struct * model, int i, int j){
 		case LINEAR:
 
 			ddot_w(model->data.n,me(model,i,j)->resid_vec,me(model,i,j)->resid_vec,&U);
-		  Rprintf("U pre correction: %g\n",U);
+		  //Rprintf("U pre correction: %g\n",U);
 			U = U - me(model,i,j)->v_sums_correct;
-		  Rprintf("U post correction: %g, correction factor: %g\n",U, me(model,i,j)->v_sums_correct);
+		  //Rprintf("U post correction: %g, correction factor: %g\n",U, me(model,i,j)->v_sums_correct);
 		  
 			U = U/nd;
-		  Rprintf("U post division: %g\n",U);
+		  //Rprintf("U post division: %g\n",U);
 			me(model,i,j)->sigma_e = U;
 		  Rprintf("sigma_e: %g\n",me(model,i,j)->sigma_e);
       //me(model,i,j)->sigma_e = 1.0;
@@ -1010,11 +1009,11 @@ void update_error_marg(struct model_marg_struct * model){
 
 void update_lb(struct model_struct * model, int i, int j){
 
-
-
 	double lba;
 	double nd = (double) model->data.n;
 	double md = (double) model->data.m;
+	double pd = (double) model->data.p;
+	md = md - pd;
 	double p_beta;
 	//if(model->control_param.max_pb==1){
 	//	p_beta = me(model,i,j)->p_max;
@@ -1033,7 +1032,7 @@ void update_lb(struct model_struct * model, int i, int j){
 			lba = -0.5*nd*(log(2*M_PI*me(model,i,j)->sigma_e) + 1);
 			//Rprintf("lba: %g\n",lba);
 			lba = lba + log(p_beta)*(me(model,i,j)->p_sums);
-			//Rprintf("lba: %g\n",lba);
+			Rprintf("lba: %g\n",md);
 			lba = lba + log(1-p_beta)*(md - me(model,i,j)->p_sums);
 			//Rprintf("lba: %g\n",lba);
 			lba = lba + me(model,i,j)->entropy;

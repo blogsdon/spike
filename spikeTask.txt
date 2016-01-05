@@ -26,7 +26,7 @@
   c) write update sigma function DONE
   d) write update lower bound function DONE
   f) test to be sure that it works DONE
-3) run diagnostic tests comparing vbsr r and c algorithm
+3) run diagnostic tests comparing vbsr r and c algorithm DONE
 3) fix vbsr algorithm...
 4) clean up vbsr old code and fix any remaining bugs
 4) write a c version of stochastic EM algorithm

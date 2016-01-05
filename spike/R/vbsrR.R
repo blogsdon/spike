@@ -241,9 +241,9 @@ vbsrR <- function(y,
     #update the iteration
     modelState$iteration <- modelState$iteration + 1
     
-    if(modelState$iteration%%10==0){
-      cat('iteration:',modelState$iteration,'\n')
-    }
+    #if(modelState$iteration%%10==0){
+    #  cat('iteration:',modelState$iteration,'\n')
+    #}
   }
   
   return(modelState)
