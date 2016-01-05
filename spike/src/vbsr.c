@@ -131,11 +131,16 @@ void scale_vector(double * vec,double * ones,int n){
 	//mean zero, variance 1
 	double mean,sd;
 	double nd = (double) n;
+	Rprintf("n: %d, nd: %g\n",n,nd);
 	ddot_w(n,vec,ones,&mean);
 	mean = mean/nd;
+	Rprintf("mean: %g\n",mean);
 	daxpy_w(n,ones,vec,-mean);
 	dnrm2_w(n,vec,&sd);
-	dscal_w(n,vec,sqrt(nd)/(sd));
+	sd = pow(sd,2);
+	nd = nd-1;
+	Rprintf("sd: %g\n",sqrt(nd/sd));
+	dscal_w(n,vec,sqrt(nd/sd));
 }
 
 
@@ -189,7 +194,8 @@ void process_data(struct model_struct * model){
 	switch(model->control_param.scaleType){
 
 		case SCALE:
-			//Rprintf("Scaling...\n");
+			Rprintf("Scaling...\n");
+		  Rprintf("m: %d\n",model->data.m);
 			
 			for(j=0;j<model->data.m;j++){
 				if(j>0){
