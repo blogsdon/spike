@@ -131,16 +131,19 @@ void scale_vector(double * vec,double * ones,int n){
 	//mean zero, variance 1
 	double mean,sd;
 	double nd = (double) n;
-	Rprintf("n: %d, nd: %g\n",n,nd);
+  //Rprintf("n: %d, nd: %g\n",n,nd);
 	ddot_w(n,vec,ones,&mean);
 	mean = mean/nd;
-	Rprintf("mean: %g\n",mean);
+	//Rprintf("mean: %g\n",mean);
+	//Rprintf("before mean, vec[1]: %g, vec[2]: %g\n",vec[0],vec[1]);
 	daxpy_w(n,ones,vec,-mean);
+	//Rprintf("after mean, vec[1]: %g, vec[2]: %g\n",vec[0],vec[1]);
 	dnrm2_w(n,vec,&sd);
 	sd = pow(sd,2);
 	nd = nd-1;
-	Rprintf("sd: %g\n",sqrt(nd/sd));
+	//Rprintf("sd: %g\n",sqrt(nd/sd));
 	dscal_w(n,vec,sqrt(nd/sd));
+	//Rprintf("after scale, vec[1]: %g, vec[2]: %g\n",vec[0],vec[1]);
 }
 
 
@@ -190,6 +193,7 @@ double compute_ssq(double *vec,int n){
 
 void process_data(struct model_struct * model){
 	int j;
+  int exc;
 	double nd = ((double) model->data.n);
 	switch(model->control_param.scaleType){
 
@@ -198,7 +202,9 @@ void process_data(struct model_struct * model){
 		  Rprintf("m: %d\n",model->data.m);
 			
 			for(j=0;j<model->data.m;j++){
-				if(j>0){
+			  exc = model->control_param.exclude[j];
+			  Rprintf("exc: %d",exc);
+				if(exc==0){
 					scale_vector(xc(model,j),model->data.one_vec,model->data.n);
 				}
 				model->data.x_sum_sq[j] = nd - 1;
@@ -219,6 +225,7 @@ void process_data(struct model_struct * model){
 
 void process_data_marg(struct model_marg_struct * model){
 	int j;
+  int exc;
 	double nd = ((double) model->data.n);
 
 	switch(model->control_param.scaleType){
@@ -227,10 +234,11 @@ void process_data_marg(struct model_marg_struct * model){
 			//Rprintf("Scaling...\n");
 			
 			for(j=0;j<model->data.m;j++){
-				if(j>0){
+			  exc = model->control_param.exclude[j];
+				if(exc==0){
 					scale_vector(xcm(model,j),model->data.one_vec,model->data.n);
 				}
-				model->data.x_sum_sq[j] = nd;
+				model->data.x_sum_sq[j] = nd - 1;
 			}
 			break;
 
@@ -919,7 +927,7 @@ void update_error(struct model_struct * model, int i, int j){
 			U = U/nd;
 		  //Rprintf("U post division: %g\n",U);
 			me(model,i,j)->sigma_e = U;
-		  Rprintf("sigma_e: %g\n",me(model,i,j)->sigma_e);
+		  //Rprintf("sigma_e: %g\n",me(model,i,j)->sigma_e);
       //me(model,i,j)->sigma_e = 1.0;
                         //Rprintf("no segfault\n");
 			if(!R_FINITE(U)){
@@ -1038,7 +1046,7 @@ void update_lb(struct model_struct * model, int i, int j){
 			lba = -0.5*nd*(log(2*M_PI*me(model,i,j)->sigma_e) + 1);
 			//Rprintf("lba: %g\n",lba);
 			lba = lba + log(p_beta)*(me(model,i,j)->p_sums);
-			Rprintf("lba: %g\n",md);
+			//Rprintf("lba: %g\n",md);
 			lba = lba + log(1-p_beta)*(md - me(model,i,j)->p_sums);
 			//Rprintf("lba: %g\n",lba);
 			lba = lba + me(model,i,j)->entropy;
