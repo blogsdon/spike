@@ -134,15 +134,22 @@ void scale_vector(double * vec,double * ones,int n){
   //Rprintf("n: %d, nd: %g\n",n,nd);
 	ddot_w(n,vec,ones,&mean);
 	mean = mean/nd;
-	//Rprintf("mean: %g\n",mean);
+	//if(fabs(mean)<1e-15){
+	//  mean=0;
+	//}
+  //Rprintf("mean: %g\n",mean);
 	//Rprintf("before mean, vec[1]: %g, vec[2]: %g\n",vec[0],vec[1]);
+	//mean=0;
 	daxpy_w(n,ones,vec,-mean);
 	//Rprintf("after mean, vec[1]: %g, vec[2]: %g\n",vec[0],vec[1]);
 	dnrm2_w(n,vec,&sd);
 	sd = pow(sd,2);
 	nd = nd-1;
-	//Rprintf("sd: %g\n",sqrt(nd/sd));
-	dscal_w(n,vec,sqrt(nd/sd));
+	//Rprintf("sd: %.*e\n",16,sqrt(nd/sd));
+	sd=sqrt(nd/sd);
+	//sd=1;
+  //Rprintf("sd: %.*e\n",16,sd);
+	dscal_w(n,vec,sd);
 	//Rprintf("after scale, vec[1]: %g, vec[2]: %g\n",vec[0],vec[1]);
 }
 
@@ -203,11 +210,11 @@ void process_data(struct model_struct * model){
 			
 			for(j=0;j<model->data.m;j++){
 			  exc = model->control_param.exclude[j];
-			  Rprintf("exc: %d",exc);
 				if(exc==0){
 					scale_vector(xc(model,j),model->data.one_vec,model->data.n);
 				}
 				model->data.x_sum_sq[j] = nd - 1;
+			  //model->data.x_sum_sq[j]=compute_ssq(xc(model,j),model->data.n);
 			}
 			break;
 
