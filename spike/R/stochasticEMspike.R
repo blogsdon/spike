@@ -1,4 +1,4 @@
-stochasticEMSpike <- function(y,x,z=NULL,l0 = -1.545509,burnIn=1e3,capture=5e3,captureFreq=0.1,seed=1){
+stochasticEMSpike <- function(y,x,z=NULL,l0 = -1.545509,burnIn=1e3,capture=5e3,captureFreq=0.1,seed=1,addIntercept=TRUE){
   ###y = outcomes
   ###x = design matrix
   ###l0 = logit transfomred prior probability of being non-zero
@@ -28,14 +28,17 @@ stochasticEMSpike <- function(y,x,z=NULL,l0 = -1.545509,burnIn=1e3,capture=5e3,c
   }
   
   #function to intialize the covariate matrix if it has not bee initialized
-  initializeFixedCovariates <- function(z,n){
+  initializeFixedCovariates <- function(z,n,addIntercept){
     if(is.null(z)){
       z <- as.matrix(rep(1,n))
+    }
+    if(addIntercept){
+      z <- cbind(rep(1,n),z)
     }
     return(z)
   }
   
-  z <- initializeFixedCovariates(z,n)
+  z <- initializeFixedCovariates(z,n,addIntercept)
   
   p <- ncol(z)
   

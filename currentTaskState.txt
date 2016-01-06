@@ -1,0 +1,17 @@
+December 22, 2015
+Working on the harmonization of vbsr and vbsrR.  Brainstorming ways in which to compare the states.  Currently they are similar but not producing the exact same results for the same simulated data set.
+1) Fix the lower bound function in original vbsr (still working on this) DONE
+2) Harmonize initial conditions DONE
+3) Track the updates of each state parameter and see where they diverge. DONE
+4) Go through each set of updates by hand DONE
+
+January 5, 2016
+Success, vbsr and vbsrR are giving the same results in the testing script. There does appear to still be an issue with the data normalization function, I'll have to look into that in the C code.
+0) synchronize lower bound DONE
+1) get rid of debugging output DONE
+2) get rid of iterations for vbsrR DONE
+3) fix scaling function in the C code
+4) check that entropy checks are correct
+5) refactor vbsr C code
+  a) streamline
+  b) get ride of 

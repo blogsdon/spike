@@ -12,15 +12,25 @@
 8) Update vignette to include new functionality DONE!
 9) Run tests to make sure it passes all of the functionality metrics
 
-#########task list, December 7 2015
-1) implement an r version of the stochastic EM algorithm (stochasticEMSpike.R)
+#########task list, December 15 2015
+1) implement an r version of the stochastic EM algorithm (stochasticEMSpike.R) DONE
   a) write skeleton of function DONE
   b) write update beta function DONE
   c) write update alpha function DONE
   d) write update sigma funciton DONE
   e) write update log likelihood function DONE
   f) test all functions DONE
-  g) TeX derivations
-2) implement an r version of variational Bayes algorithm
-3) run diagnostic tests comparing to c algorithm
+2) implement an r version of variational Bayes algorithm DONE
+  a) write update beta function DONE
+  b) write udpate alpha function DONE
+  c) write update sigma function DONE
+  d) write update lower bound function DONE
+  f) test to be sure that it works DONE
+3) run diagnostic tests comparing vbsr r and c algorithm DONE
+3) fix vbsr algorithm...
+4) clean up vbsr old code and fix any remaining bugs
 4) write a c version of stochastic EM algorithm
+5) run diagnostic tests comparing SEMS r and c algorithms
+6) derive a spike random effects test (for use in the stochastic em algorithm)
+7) put together joint vbsr + stochastic em algorithm, show that it improves results in terms of computation time
+8) TeX derivations document
