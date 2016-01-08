@@ -1,0 +1,131 @@
+########enums:
+
+
+########Structs:
+
+matrix_v: a struct used to define the base of a matrix representation as a vector of vectors for a double matrix
+  -double * col (has one element that is a pointer to a double)
+
+matrix_i: a struct used to define the base of a matrix representation as a vector of vectors for an integer matrix
+  -int * col (has one element that is a pointer to an int)
+  
+control_param_struct: a data structure that contains all the relevant parameter settings to control the model state.  These include
+  - double eps (precision for convergence criteria)
+  - double * l0_path (a pointer to a vector of l0 penalty parameters)
+  - double * pb_path (a pointer to a vector of probability representation of l0_path)
+  - int * exclude (a pointer to a vector which is 0 if a variable is penalized and 1 otherwise)
+  - double * penalty_factor (a pointer to a vector which allows for optional rescaling of predictors)
+  - int maxit (maximum iterations to run the algorithm)
+  - int path_length (length of the path)
+  - int n_orderings (number of restarts)
+  - regressionType regressType (type of regression that is being run)
+  - scalingType scaleType (whether or not to scale columns)
+  - estimationType estType (whether or not to do Bayesian Model Averaging)
+  - errorType errType (whether or not to do 1se + KL min on path of l0 param)
+  - bmaType bType (whether or not to do exact or approximate b.m.a.)
+  - kl_percentile (which percentile of null distributed features to use for kl test)
+  - int total_replicates (path_length * n_orderings)
+  
+model_param_struct: a data structure that contains all the relevant model parameters describing the state of a given run of the vbsr algorithm
+  - double * beta_mu (a pointer to a vector which defines the mean parameter from the posterior distribution over beta)
+  - double * beta_sigma (a pointer to a vector which defines the variance parameter from the posterior distribution over beta)
+  - double * beta_chi (a vector of beta_mu^2/beta_sigma)
+  - double * beta_p (a vector of posterior probability estimates for beta)
+  - double * e_beta (expectation of beta)
+  - double * e_beta_sq (expectation of beta^2)
+  - double sigma_e (error variance parameter)
+  - double lb (lower bound)
+  - double p_sums (sum of the probabilities)
+  - double entropy (entropy correction factor used to produce the lower bound estimate)
+  - double v_sums_correct (correction factor to compute expectation of complete log likelihood, U potential)
+  - double * w_vec (weights for IRLS algorithm for logistic regression)
+  - double * mu_vec (prediciton values from IRLS algorithm for logistic regression)
+  - double * resid_vec (residual vector)
+  - double * pred_vec_old (old prediction vector for irls logistic regression)
+  - double * pred_vec_new (new prediction vector for irls logistic regression)
+  - double * x_w (reweightings from irls logistic regression)
+  - int ord_index (ordering of current model_param)
+  - int path_index (path index of current model_param)
+  
+data_struct
+
+order_struct
+
+model_struct
+
+control_param_marg
+
+model_param_marg
+
+model_marg_struct
+
+
+###############functions: 
+
+identify_unique
+
+xc
+
+xcm
+
+oc
+
+me
+
+initialize_model_param
+
+free_model_param
+
+ddot_w
+
+daxpy_w
+
+dnrm2_w
+
+dscal_w
+
+scale_vector
+
+cor
+
+compute_ssq
+
+initialize_model
+
+initialize_model_marg
+
+free_model
+
+free_model_marg
+
+process_data
+
+process_data_marg
+
+copy_model_state
+
+update_beta
+
+update_beta_marg
+
+update_error
+
+update_error_marg
+
+update_lb
+
+update_lb_marg
+
+run_vbsr
+
+run_marg
+
+compute_bma_correct
+
+collapse_results
+
+collapse_results_marg
+
+run_marg_analysis
+
+run_vbsr_wrapper

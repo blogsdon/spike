@@ -18,6 +18,11 @@ January 6, 2016
 There was a bug in the post processing step to rescale the parameters.  Need to implement functionality to rescale beta estimates.  Next steps for cleaning up C code
 0) split out utility functions into an independent library
 1) rename utility functions with more informative names
-2) switch names of functions to camelcase
+2) switch all names of functions to camelcase
 3) get rid of marginal analysis
 4) plot out general schema to incorporate additional methods into library
+  i) build better structs to allow for general tool kit
+5) make pointer arithmetic much clearer
+
+January 8, 2016
+0) putting together audit of all current functions in the C code
