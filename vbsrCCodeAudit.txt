@@ -1,5 +1,23 @@
 ########enums:
+regressionType: type of regression being used
+  -linear (normal error model)
+  -logistic (binomial model)
 
+scalingType: whether or not to scale the columns of the predictor matrix to have unit variance and zero mean
+  -SCALE
+  -NOSCALE
+
+estimationType: whether or not to do Bayesian model averaging or whether to take the maximum identified lower bound
+  -BMA
+  -MAXIMAL
+
+errorType: whether or not to use KL divergence choice of l0
+  -KL
+  -NOKL
+
+bmaType: whether to do approximate or full variance correction on Bayesian Model averaging
+  -APPR
+  -EXACT
 
 ########Structs:
 
@@ -8,7 +26,7 @@ matrix_v: a struct used to define the base of a matrix representation as a vecto
 
 matrix_i: a struct used to define the base of a matrix representation as a vector of vectors for an integer matrix
   -int * col (has one element that is a pointer to an int)
-  
+
 control_param_struct: a data structure that contains all the relevant parameter settings to control the model state.  These include
   - double eps (precision for convergence criteria)
   - double * l0_path (a pointer to a vector of l0 penalty parameters)
@@ -25,7 +43,7 @@ control_param_struct: a data structure that contains all the relevant parameter 
   - bmaType bType (whether or not to do exact or approximate b.m.a.)
   - kl_percentile (which percentile of null distributed features to use for kl test)
   - int total_replicates (path_length * n_orderings)
-  
+
 model_param_struct: a data structure that contains all the relevant model parameters describing the state of a given run of the vbsr algorithm
   - double * beta_mu (a pointer to a vector which defines the mean parameter from the posterior distribution over beta)
   - double * beta_sigma (a pointer to a vector which defines the variance parameter from the posterior distribution over beta)
@@ -46,39 +64,99 @@ model_param_struct: a data structure that contains all the relevant model parame
   - double * x_w (reweightings from irls logistic regression)
   - int ord_index (ordering of current model_param)
   - int path_index (path index of current model_param)
-  
-data_struct
 
-order_struct
+data_struct: a data structure that contains all of the fixed data variables
+  - struct matrix_v * X (a pointer to a vector of matrix_v struct pointers)
+  - double * y (a pointer to a vector of response variables)
+  - double var_y (the variance of y)
+  - int n (sample size)
+  - int m (number of predictors)
+  - int p (number of unpenalized variables)
+  - double * x_sum_sq (a pointer to a vector of the sum of squares of the predictor matrix)
+  - struct matrix_i * ordering ( a pointer to a vector of matrix_i struct pointers)
+  - double * one_vec (a pointer to a vector of length n ones)
 
-model_struct
+order_struct: a data structure that contains all the model parameters for a given ordering of the predictors in X
+  - struct model_param_struct * model_param (a pointer to a model param struct pointer)
 
-control_param_marg
+model_struct: a single data structure that contains all the control parameters, model parameters, and data for a given run of the vbsr algorithm
+  -struct control_param_struct control_param (a control param struct)
+  -data_struct data (the data for a given model)
+  - order_struct * order (a pointer to a order_struct that contains all the model parameters across orderings)
 
-model_param_marg
+control_param_marg (control parameters for marginal analysis)
 
-model_marg_struct
+model_param_marg (model parameters for marginal analysis)
+
+model_marg_struct (overall structure for marginal analysis)
 
 
-###############functions: 
+###############functions:
 
-identify_unique
+void identify_unique (identify unique models based on lower bound values)
+  INPUTS
+  -double * lb_t (a pointer to a vector of lower bound values)
+  -double * post_p (a pointer to a vector of model posterior proabilities, updated by the function)
+  -int n (number of models being considered)
+  -double tol (tolerance of comparison)
+  OUTPUTS
+  none
 
-xc
+double * xc (utility function that returns the pointer that points to column j of the data matrix)
+  INPUTS
+  struct model_struct * model (a pointer to the model struct with the data in it)
+  int j (the jth index of that column)
+  OUTPUTS
+  returns a pointer to a vector of doubles
 
-xcm
+double xcm same as xc(), but for marginal analysis
 
-oc
+double * oc (utility function that returns the pointer to column j of the ordering matrix)
+  INPUTS
+  struct model_struct * model (a pointer to the model struct with all the data in it)
+  int j (the index variable)
+  OUTPUTS
+  returns a pointer to a vector of ints
 
-me
+model_param_struct * me (utility to extract the model parameter state when indexing over the the orderings and the path of l0)
+  INPUTS
+  model_struct * model (a pointer to the current model struct)
+  int i (index of ordering)
+  int j (index of l0 path)
+  OUTPUTS
+  returns a pointer to a model_param_struct for the appropriate state (ordering and l0)
 
-initialize_model_param
+void initialize_model_param (initialize the model parameters for each ordering and each l0 value)
+  INPUTS
+  -int n (sample size)
+  -int m (number of columns of predictor matrix)
+  -int i (index of ordering)
+  -int j (index of l0 path)
+  -struct model_struct * model (pointer to overall model)
+  -double * y (pointer to response vector)
+  -double var_y (variance of response vector)
+  OUTPUTS
+  none
 
-free_model_param
+void free_model_param (function to free all memory allocations for model parameters)
+  INPUTS
+  -model_struct * model (pointer to overall model)
+  int i (index of ordering)
+  int j (index of l0 path)
+  OUTPUTS
+  none
 
-ddot_w
+void ddot_w (wrapper for dot product)
+  INPUTS
+  int n (length of vectors)
+  double * vect1 (pointer to a vector of doubles)
+  double * vect2 (pointer to a vector of doubles)
+  double * result (pointer to a double that will contain the result)
+  OUTPUTS
+  none
 
 daxpy_w
+  INPUTS
 
 dnrm2_w
 
