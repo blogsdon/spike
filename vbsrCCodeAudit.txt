@@ -155,55 +155,236 @@ void ddot_w (wrapper for dot product)
   OUTPUTS
   none
 
-daxpy_w
+void daxpy_w (wrapper for y <- ax+y)
   INPUTS
+  int n (length of vectors)
+  double * x (pointer to a vector of doubles of length n)
+  double * y (pointer to a vector of doubles of length n)
+  double alpha
+  OUTPUTS
+  none
 
-dnrm2_w
+void dnrm2_w (wrapper for the l2 norm function: sqrt(x' x))
+  INPUTS
+  int n (length of vectors)
+  double * x (pointer to a vector of doubles of length n)
+  double * result (pointer to a double that will contain the result)
+  OUTPUTS
+  none
 
-dscal_w
+void dscal_w (wrapper to scale a vector by a constant: x <- alpha*x)
+  INPUTS
+  int n (length of vectors)
+  double * x (pointer to a vector of doubles of length n)
+  double alpha (double containing the scaling factor)
+  OUTPUS
+  none
 
-scale_vector
+void scale_vector (wrapper to center and scale a vector: vec)
+  INPUTS
+  double * vec (pointer to a vector doubles of length n)
+  double * ones (pointer to a vector of ones of length n)
+  int n (length of vectors)
+  OUTPUTS
+  none
 
-cor
+void cor (wrapper to compute the correlation between two vectors)
+  INPUTS
+  double * vec1 (pointer to a vector of doubles of length n)
+  double * vec2 (pointer to a vector of doubles of length n)
+  double * ones (pointer to a vector of ones of length n)
+  double * corv (pointer to a double that stores the result)
+  OUTPUTS
+  none
 
-compute_ssq
 
-initialize_model
+double compute_ssq (wrapper to compute the sum of squares)
+  INPUTS
+  double * vec (pointer to a vector of doubles of length n)
+  int n (length of vector)
+  OUTPUTS
+  none
 
-initialize_model_marg
+void initialize_model (function that takes all the inputs passed from R and initializes the model state)
+  INPUTS
+  double * eps (pointer to the precision of convergence tolerance)
+  double * l0_path (pointer to a vector of l0 values)
+  double * pb_path (pointer to a vector of prior probability values)
+  int * exclude (pointer to a vector of ints that determine whether or not to penalize a variable)
+  double * penalty_factor (pointer to a vector of doubles that specifies if the columns should be scaled by a corresponding factor)
+  int * maxit (pointer to the maximum iterations to allow)
+  int * path_length (pointer to how many l0 values to go over)
+  int * n_orderings (pointer to how many orderings to run)
+  int * regress (pointer to an int indicating the regression type)
+  int * scale (pointer to an int indicating whether to scale columns)
+  int * est (pointer to an int indicating which estimationType)
+  int * error (pointer to an int indicating which errorType)
+  double * kl (??)
+  int * approx (pointer to an int indicating which bmaType)
+  int * total_replicates (pointer to an int which is path_length*n_orderings)
+  double * X (pointer to a vector of doubles of the data matrix in column major form)
+  double * y (pointer to a vector of doubles of the response)
+  double * var_y (pointer to a double of the variance of y)
+  int * n (pointer to an int indicating the number of samples)
+  int * m (pointer to an int indicating the number of features)
+  int * ordering_mat (pointer to a vector of doubles of the ordering matrix in column major form)
+  struct model_struct * model (pointer to the model struct where all the results will be stored)
+  OUTPUTS
+  NONE
 
-free_model
 
-free_model_marg
+void initialize_model_marg (function to initialize the parameters for the marginal model)
+  INPUTS
+  double * eps (convergence criteria)
+  double * exclude (which to penalize-> I think this is all)
+  double * maxit (maximum iterations)
+  double * regress (regresison type)
+  double * X (data matrix)
+  double * y (response vector)
+  double * var_y (variance of y)
+  int * n (number of samples)
+  int * m (number of features)
+  struct model_marg_struct * model (pointer to marginal model structure)
 
-process_data
+void free_model (function to free model parameters)
+  INPUTS
+  struct model_struct * model (pointer to model struct)
 
-process_data_marg
+void free_model_marg (function to free marginal model parameters)
+  INPUTS
+  struct model_marg_struct *model (pointer to marginal model struct)
 
-copy_model_state
+void process_data (function to potentially scale data and compute sum of squared columns of data matrix)
+  INPUTS
+  model_struct * model (pointer to model struct)
 
-update_beta
+void process_data_marg (function to potentially scale data and compute sum of squared columns of data matrix for marginal model)
+  INPUTS
+  model_marg_struct * model (pointer to model struct)
 
-update_beta_marg
+void copy_model_state (function to copy the model state between l0 paths for a given ordering)
+  INPUTS
+  model_struct * model (pointer to model struct)
+  int i (ordering index)
+  int j (l0_path index)
 
-update_error
+void update_beta (function to update the beta parameters of the model)
+  INPUTS
+  model_struct * model (pointer to model struct)
+  int i (ordering index)
+  int j (l0_path index)
 
-update_error_marg
 
-update_lb
+void update_beta_marg (function to update the beta parameters of the marginal model)
+  INPUTS
+  model_struct * model (pointer to model struct)
+  int * use_vec (pointer to index vector of lenth cv that indicates which columns of the data matrix to use)
+  int cv (total number of covariates)
 
-update_lb_marg
+void update_error (function to update the error parameter of the model)
+  INPUTS
+  model_struct * model (pointer to model struct)
+  int i (ordering index)
+  int j (l0 path index)
 
-run_vbsr
+void update_error_marg (function to update the error parameter of the marginal model)
+  INPUTS
+  model_marg_struct * model (pointer to model struct)
 
-run_marg
+void update_lb (function to update the lower bound of the model)
+  INPUTS
+  model_struct * model (pointer to model)
+  int i (ordering index)
+  int j (path index)
 
-compute_bma_correct
+void update_lb_marg (function to update the likelihood of the marginal model)
+  INPUTS
+  model_marg_struct * model (pointer to model)
 
-collapse_results
+void run_vbsr (function to run the vbsr algorithm across all orderings and l0 parameters)
+  INPUTS
+  model_struct * model (pointer to model)
 
-collapse_results_marg
+void run_marg (function to run the marginal model)
+  INPUTS
+  model_marg_struct * model (pointer to marginal model)
 
-run_marg_analysis
 
-run_vbsr_wrapper
+void compute_bma_correct (function to compute the BMA variance correction for the z statistics)
+  INPUTS
+  model_struct * model
+  int k (index for the column of X)
+  double * post_prob (pointer to a vector of doubles for the model posterior probabilities)
+  double * s_bma (pointer to double containing the variance correction for the kth statistic)
+  int j (index for the l0 path)
+
+
+void collapse_results (function to migrate the results from the model struct into the vector that are natively stored in R)
+  INPUTS
+  struct model_struct * model
+  double * beta_chi_mat (z statistic matrix)
+  double * beta_mu_mat (beta mu matrix)
+  double * beta_sigma_mat (beta sigma matrix)
+  double * e_beta_mat (expected value of beta matrix)
+  double * beta_p_mat (posterior probability matrix of the individual betas)
+  double * lb_mat (lower bound vector)
+  double * kl_mat (kullback leibler divergence matrix)
+
+void collapse_results_marg (function to migrate the results from the model struct into the vectors that are natively stored in R)
+  INPUTS
+  struct model_marg_struct * model
+  double * beta_chi (z statistic)
+  double * beta_mu (beta estimate)
+  double * beta_sigma (variance estimate)
+  double * beta_p (posterior probability)
+  double *lb (log likelihood)
+
+
+void run_marg_analysis (function to run the full marginal analysis, taking the paramters passed in from R, creating the internal structs, running the algorithm, and returning the results)
+  INPUTS
+  double * eps (tolerance convergence threshold)
+  int * exclude (vector of inclusions)
+  int * maxit (maximum iterations)
+  int * regress (regression type)
+  int * scale (scaling type)
+  double * X (data matrix)
+  double * y (response vector)
+  int * n (sample size)
+  int * m (number of features)
+  double * beta_chi (result vector for z statistics)
+  double * beta_mu (result vector for effect estimates)
+  double * beta_sigma (result vector for variance of effect estimates)
+  double * beta_p (result vector for posterior probabilities)
+  double * lb (log likelihood)
+
+void run_vbsr_wrapper
+  INPUTS
+  double * eps (tolerance convergence threshold)
+  double * l0_path (l0 path parameter)
+  double * pb_path (prior probability path)
+  int * exclude (whether or not to penalize)
+  double * penalty_factor (column specific scaling factor)
+  int * maxit (maximum iterations)
+  int * path_length (number of l0 paramters)
+  int * n_orderings (number of re-orderings)
+  int * regress (regression type)
+  int * scale (scaling type)
+  int * est (estimation type)
+  int * error (error model type)
+  double * kl (kullback leibler nonsense)
+  int * approx (whether or not to do BMA correction)
+  int * total_replicates (path_length*n_orderings)
+  double * X (data matrix)
+  double * y (response vector)
+  double * var_y (variance of y)
+  int * n (sample size)
+  int * m (number of features)
+  int * ordering_mat (ordering matrix)
+  double * beta_chi_mat (result matrix for z statistics)
+  double * beta_mu_mat (result matrix for beta mean statistics)
+  double * beta_sigma_mat (result matrix for beta variance statistics)
+  double * e_beta_mat (result matrix for expectations)
+  double * beta_p_mat (result matrix for posterior probabilities)
+  double * lb_mat ( result matrix for lower bound)
+  double * kl_mat ( result matrix for kl divergence estimates)
+  int * nthreads (number of threads for multi threading)
