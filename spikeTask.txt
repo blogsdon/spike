@@ -34,3 +34,4 @@
 6) derive a spike random effects test (for use in the stochastic em algorithm)
 7) put together joint vbsr + stochastic em algorithm, show that it improves results in terms of computation time
 8) TeX derivations document
+9) spike space algorithm (coupled regressions)

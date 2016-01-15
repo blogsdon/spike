@@ -3,29 +3,64 @@ regressionType: type of regression being used
   -linear (normal error model)
   -logistic (binomial model)
 
+  new version
+  - regressionType -> generalizedLinearModelType
+  - NORMAL (formerly linear)
+  - BINOMIAL (formerly logistic)
+  - GAMMA (new)
+  - POISSON (new)
+  - MULTINOMIAL (new)
+  - INVERSEGAUSSIAN (new)
+
+
 scalingType: whether or not to scale the columns of the predictor matrix to have unit variance and zero mean
   -SCALE
   -NOSCALE
+
+  new version
+  - deprecated, stored as boolean variable in the control paramter structure instead (scaleFeatureMatrix)
 
 estimationType: whether or not to do Bayesian model averaging or whether to take the maximum identified lower bound
   -BMA
   -MAXIMAL
 
+  new version
+  estimationType: modelSpaceSelection
+  -BMA (do approximate Bayesian model averaging)
+  -MAXMIAL (return best result identified)
+  -FULL (return full set of unique solutions identified)
+
 errorType: whether or not to use KL divergence choice of l0
   -KL
   -NOKL
 
+  new version
+  - deprecated
+
 bmaType: whether to do approximate or full variance correction on Bayesian Model averaging
   -APPR
   -EXACT
+
+  new version
+  - deprecated, stored as boolean variable in control parameter struct (applyBMAcovarianceCorrection)
+
 
 ########Structs:
 
 matrix_v: a struct used to define the base of a matrix representation as a vector of vectors for a double matrix
   -double * col (has one element that is a pointer to a double)
 
+  new version
+  -matrix_v -> doubleColumnVector
+  -col - column
+
+
 matrix_i: a struct used to define the base of a matrix representation as a vector of vectors for an integer matrix
   -int * col (has one element that is a pointer to an int)
+
+  new version
+  -matrix_i -> integerColumnVector
+  -col -> column
 
 control_param_struct: a data structure that contains all the relevant parameter settings to control the model state.  These include
   - double eps (precision for convergence criteria)
@@ -43,6 +78,24 @@ control_param_struct: a data structure that contains all the relevant parameter 
   - bmaType bType (whether or not to do exact or approximate b.m.a.)
   - kl_percentile (which percentile of null distributed features to use for kl test)
   - int total_replicates (path_length * n_orderings)
+
+  new version
+  control_param_struct -> controlParameterSettings
+  -eps -> epsilon
+  -l0_path -> l0Vector
+  -pb_path -> priorProbabilityVector
+  -exclude -> penalizeVariable
+  -penalty_factor -> featureColumnScalingFactor
+  -maxit -> maximumIterations
+  -path_length -> l0VectorLength
+  -n_orderings -> numberOfRandomRestarts
+  -regressType -> generalizedLinearModelUsed
+  -scalingType -> scaleFeatureMatrix
+  -estType -> modelSpaceSelectionUsed
+  -bType -> applyBmaCovarianceCorrection
+  -kl_percentile -> removed
+  -total_replicates -> totalModelFits
+
 
 model_param_struct: a data structure that contains all the relevant model parameters describing the state of a given run of the vbsr algorithm
   - double * beta_mu (a pointer to a vector which defines the mean parameter from the posterior distribution over beta)
