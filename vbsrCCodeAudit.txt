@@ -18,7 +18,7 @@ scalingType: whether or not to scale the columns of the predictor matrix to have
   -NOSCALE
 
   new version
-  - deprecated, stored as boolean variable in the control paramter structure instead (scaleFeatureMatrix)
+  - deprecated, stored as an integer variable in the control parameter structure instead (scaleFeatureMatrix)
 
 estimationType: whether or not to do Bayesian model averaging or whether to take the maximum identified lower bound
   -BMA
@@ -42,7 +42,7 @@ bmaType: whether to do approximate or full variance correction on Bayesian Model
   -EXACT
 
   new version
-  - deprecated, stored as boolean variable in control parameter struct (applyBMAcovarianceCorrection)
+  - deprecated, stored as an integer variable in control parameter struct (applyBMAcovarianceCorrection)
 
 
 ########Structs:

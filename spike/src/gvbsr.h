@@ -96,7 +96,7 @@ struct controlParameterSettings {
 //model_param_struct: a data structure that contains all the relevant
 //		      model parameters describing the state
 //		      of a given run of the vbsr algorithm
-struct model_param_struct {
+struct modelParameters {
 	//beta_mu: beta mean update from vbsr algorithm
 	//	   default: everything initialized to 0
 	double * beta_mu;
@@ -186,41 +186,36 @@ struct model_param_struct {
 
 //data_struct: the data structure that contains
 //	       all of the fixed data vectors
-struct data_struct {
+struct data {
 
 	//X: the data structure containing all of the
 	//   relevant variables.
-	struct matrix_v * X;
+	const struct doubleColumnVector * x;
 
 	//y: the vector containing the phenotype data
-	double * y;
+	const double * y;
 
 	//var_y: the variance of the phenotype
-	double var_y;
+	const double responseVariance;
 
 	//n: the number of samples
-	int n;
+	const int n;
 
 	//m: the number of features
-	int m;
+	const int m;
 
 	//p: the number of unpenalized features
-	int p;
+	const int p;
 
 	//x_sum_sq: a vector of the l2^2 norm of the columns of X.
-	double * x_sum_sq;
-
+	const double * x_sum_sq;
 
 	//ordering: a vector of vectors of the multiple orderings
 	//	    to be run by the algorithm
-	struct matrix_i * ordering;
+	const struct integerColumnVector * orderingMatrix;
 
 	//one_vec: a vector of length n of ones
-	double * one_vec;
-
-
-
-
+	const double * onesVector;
 
 };
 
