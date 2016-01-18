@@ -26,10 +26,10 @@ There was a bug in the post processing step to rescale the parameters.  Need to 
 
 January 8, 2016 - finish all by June 1! Linpack, Lapack, blas
 0) putting together audit of all current functions in the C code
-1) generalize data structures to anticipate 
+1) generalize data structures to anticipate
   i) vb mixed effect version (matrices?) - implement in R first
   ii) vb group spike (matrices?) - implement in R first
-  iii) exact regression 
+  iii) exact regression
   iv) exact group spike
   v) exact mixed effect
   vi) generalized linear model (irls)
@@ -42,4 +42,7 @@ January 8, 2016 - finish all by June 1! Linpack, Lapack, blas
 3) hadoop?
 
 January 11, 2016
-Working on C code audit
+Working on C code audit (finished)
+
+January 17, 2016
+Best strategy moving forward

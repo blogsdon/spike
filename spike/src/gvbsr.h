@@ -99,84 +99,103 @@ struct controlParameterSettings {
 struct modelParameters {
 	//beta_mu: beta mean update from vbsr algorithm
 	//	   default: everything initialized to 0
-	double * beta_mu;
+	//double * beta_mu;
+	double * betaMu;
 
 	//beta_sigma: beta variance update from vbsr algorithm
 	//	      default: everything initialized to 0
-	double * beta_sigma;
+	//double * beta_sigma;
+	double * betaSigmaSquared;
 
-	//beta_chi: beta_mu^2/beta_sigma
+	//beta_chi: betaMu/sqrt(betaSigmaSquared)
 	//	    default: 0
-	double * beta_chi;
+	//double * beta_chi;
+	double * betaChi;
 
 	//beta_p: beta variational scaling update from vbsr algorithm
 	//	  default: everything initialized to 0
-	double * beta_p;
+	//double * beta_p;
+	double * betaPosteriorProbability;
 
 	//e_beta: expectation of beta from vbsr algorithm
 	//	  default: everything initalized to 0
 	//	  update: beta_p*beta_mu
-	double * e_beta;
+	//double * e_beta;
+	double * expectationBeta;
 
 	//e_beta_sq: expectation of beta_sq from vbsr algorithm
 	//	     default: everything is initialized to 0
 	//	     update: beta_p*(beta_mu^2+beta_sigma)
-	double * e_beta_sq;
+	//double * e_beta_sq;
+  double * expectationBetaSquared;
 
 	//sigma_e: error variance update from vbsr algorithm
 	//	   default: initialized to variance of phenotype
-	double sigma_e;
+	//double sigma_e;
+	double sigmaSquaredError;
 
 	//lb: lower bound from vbsr algorithm
 	//    default: 0
-	double lb;
+	//double lb;
+	double lowerBound;
 
 	//p_sums: sum of beta_p
 	//	  default: 0
-	double p_sums;
+	//double p_sums;
+	double sumOfBetaPosteriorProbabilities;
 
-	double entropy;
+	//double entropy;
+	double posteriorProbabilityEntropy;
 
 	//v_sums_correct: a variable used to correct the lb
 	//		  expectation for the beta^2 terms
 	//		  sum_{j} (e_beta^2-e_beta_sq)*x_sum_sq
 	//		  default: 0
-	double v_sums_correct;
+	//double v_sums_correct;
+	double betaSquaredExpectationCorrection;
 
 	//w_vec: the weights in the irls vbsr logistic regression
 	//	 algorithms
 	//	 default: 1
-	double * w_vec;
+	//double * w_vec;
+	double * irlsWeightVector;
 
 	//mu_vec: the pred values in the irls vbsr logistic
 	//	  regression algorithm
 	//        default: 0
-	double * mu_vec;
+	//double * mu_vec;
+	double * irlsPredictionVector;
 
 	//resid_vec: the residual vector y-X%*%e_beta
 	//	     default: y
-	double * resid_vec;
+	//double * resid_vec;
+	double * residualVector;
 
 	//pred_vec_old: the old prediction vector for irls vbsr
 	//	 	default: 0
-	double * pred_vec_old;
+	//double * pred_vec_old;
+	double * irlsOldPredictionVector;
 
 	//pred_vec_new: the new prediction vector for irls vbsr
 	//		default: 0
-	double * pred_vec_new;
+	//double * pred_vec_new;
+	double * irlsNewPredictionVector;
 
 	//x_w: the reweightings...
 	//	default: 0;
-	double * x_w;
+	//double * x_w;
+	double * irlsReweightings;
 
 
 	//ord_index: the ordering of the current model_param
 	//	     default: 0
-	int ord_index;
+	//int ord_index;
+	int orderingIndex;
 
 	//path_index: the path index of the current model_param
 	//	      default: 0
-	int path_index;
+	//int path_index;
+	int penaltyPathIndex;
 
 
 };
