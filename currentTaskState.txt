@@ -46,3 +46,16 @@ Working on C code audit (finished)
 
 January 17, 2016
 Best strategy moving forward
+ - finish C code clean up (naming, removing redundant features)
+ - stochastic EM algorithm (ordering-> iterations)
+ - remove marginal analysis
+ - clean up corresponding R code (R code audit)
+ - figure out how to integrate the spikeUtilities as a separate library
+ - add stochasticEM as a separate library
+ - add each vb/stochEM glm function as a separate library
+ - do tests for stochEM
+ - linear mixed effect models (vb/stochEM)
+ - group spike
+ - +slab
+ - add CV1se
+ 
