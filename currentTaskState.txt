@@ -58,4 +58,25 @@ Best strategy moving forward
  - group spike
  - +slab
  - add CV1se
- 
+
+ January 18, 2016
+ - Finish updating header file of gaussianVariationalBayesSpikeRegression
+  by harmonizing all new names for variables, functions, and structs
+ - Update .c/.r files
+    -harmonize with header (and spike utilities header) in terms of all new names/functions/structs
+    -update inputs from R
+    -improve model comparison function
+    -add additional model Results (full model space)
+    -add all model parameters as output to R
+    -update R function (get rid of marginal analysis, majorly clean up code)
+    -add unpenalized covariate update function (separately)
+    -add lower bound test
+    -debug
+    -valgrind
+    -time analyze, identify if their are any major inefficiencies to be optimized over
+-Figure out how to add s3 model functionality so print, summarize, plot functions can be applied to the output
+-Implement stochastic EM C function
+-build stochastic EM/Vbsr R integration
+-build stochastic EM/VBSR C integration
+-develop a battery of rigorous tests on real and simulated data for all
+-
