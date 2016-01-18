@@ -6,12 +6,40 @@ Working on the harmonization of vbsr and vbsrR.  Brainstorming ways in which to 
 4) Go through each set of updates by hand DONE
 
 January 5, 2016
-Success, vbsr and vbsrR are giving the same results in the testing script. There does appear to still be an issue with the data normalization function, I'll have to look into that in the C code.
+Success, vbsr and vbsrR are giving the same results in the testing script. There does appear to still be an issue with the data normalization function, I'll have to look into that in the C code. fixed
 0) synchronize lower bound DONE
 1) get rid of debugging output DONE
 2) get rid of iterations for vbsrR DONE
-3) fix scaling function in the C code
+3) fix scaling function in the C code DONE
 4) check that entropy checks are correct
 5) refactor vbsr C code
-  a) streamline
-  b) get ride of 
+
+January 6, 2016
+There was a bug in the post processing step to rescale the parameters.  Need to implement functionality to rescale beta estimates.  Next steps for cleaning up C code
+0) split out utility functions into an independent library
+1) rename utility functions with more informative names
+2) switch all names of functions to camelcase
+3) get rid of marginal analysis
+4) plot out general schema to incorporate additional methods into library
+  i) build better structs to allow for general tool kit
+5) make pointer arithmetic much clearer
+
+January 8, 2016 - finish all by June 1! Linpack, Lapack, blas
+0) putting together audit of all current functions in the C code
+1) generalize data structures to anticipate 
+  i) vb mixed effect version (matrices?) - implement in R first
+  ii) vb group spike (matrices?) - implement in R first
+  iii) exact regression 
+  iv) exact group spike
+  v) exact mixed effect
+  vi) generalized linear model (irls)
+  vii) m-estimators
+  viii) gee's
+  vii) multinomial
+  viii) gaussian graphical model
+  x) +slab
+2) tensor flow
+3) hadoop?
+
+January 11, 2016
+Working on C code audit

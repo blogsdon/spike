@@ -27,10 +27,11 @@
   d) write update lower bound function DONE
   f) test to be sure that it works DONE
 3) run diagnostic tests comparing vbsr r and c algorithm DONE
-3) fix vbsr algorithm...
+3) fix vbsr algorithm DONE
 4) clean up vbsr old code and fix any remaining bugs
 4) write a c version of stochastic EM algorithm
 5) run diagnostic tests comparing SEMS r and c algorithms
 6) derive a spike random effects test (for use in the stochastic em algorithm)
 7) put together joint vbsr + stochastic em algorithm, show that it improves results in terms of computation time
 8) TeX derivations document
+9) spike space algorithm (coupled regressions)
