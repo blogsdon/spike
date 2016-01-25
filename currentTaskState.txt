@@ -80,3 +80,25 @@ Best strategy moving forward
 -build stochastic EM/VBSR C integration
 -develop a battery of rigorous tests on real and simulated data for all
 -
+
+January 19, 2016
+NEW IDEA: assign md5 checksums to each identified model (i.e. produce a hash table over the model parameters struct)
+
+Hammering away on vbsr.R to clean it up
+n -> numberSamples
+m -> numberPenalizedFeatures
+total_replicates -> totalModelFits
+remove beta_chi_mat
+beta_mu_mat -> betaMuResult
+beta_sigma_mat <- betaSigmaSquaredResult
+e_beta_mat <- expectationBetaResult
+beta_p_mat <- posteriorProbabilityBetaResult
+lb_mat <- lowerBoundResult
+y <- responseVariable
+X <- penalizedDataMatrix
+Z <- unpenalizedDataMatrix
+
+1) figure out how to pass a list to C with everything in it so I can reduce the number of calls
+
+January 21, 2016
+still working on the general clean up of vbsr code

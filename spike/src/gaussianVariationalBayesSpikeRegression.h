@@ -254,7 +254,7 @@ void identifyUniqueModels(gaussianModelRealization * model);
 
 double * extractPenalizedFeatureMatrixColumn(struct gaussianModelRealization * model, int columnIndex);
 
-int * extractOrderingMatrixolumn(struct gaussianModelRealization * model, int columnIndex);
+int * extractRealizationMatrixColumn(struct gaussianModelRealization * model, int columnIndex);
 
 struct gaussianModelRealization * getModelParameterRealization(struct gaussianModelRealization * model,int realizationIndex, int penaltyIndex);
 

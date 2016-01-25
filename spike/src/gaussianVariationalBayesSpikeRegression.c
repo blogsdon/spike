@@ -3,106 +3,102 @@
 #include "gaussianVariationalBayesSpikeRegression.h"
 
 //xc: return jth column of data matrix x
-double * xc(struct model_struct * model, int j){
-	return (&(model->data.X[j]))->col;
-}
-
-double * xcm(struct model_marg_struct * model, int j){
-	return (&(model->data.X[j]))->col;
+double * extractPenalizedFeatureMatrixColumn(struct gaussianModelRealization * model,
+	int columnIndex){
+	return (&(model->data.penalizedDataMatrix[columnIndex]))->column;
 }
 
 //oc: return jth column of ordering matrix "ordering"
-int * oc(struct model_struct * model, int j){
-	return (&(model->data.ordering[j]))->col;
+int * extractRealizationMatrixColumn(struct gaussianModelRealization * model,
+	int columnIndex){
+	return (&(model->data.realizationMatrix[columnIndex]))->column;
 }
 
 //me: return the ith, jth element of the ordering, path model parameters
-struct model_param_struct * me(struct model_struct * model,int i, int j){
-	return (&((&(model->order[i]))->model_param[j]));
+struct gaussianModelRealization * getModelParameterRealization(struct gaussianModelRealization * model,
+	 int realizationIndex,
+	 int penaltyIndex){
+	return (&((&(model->modelParameterRealization[realizationIndex]))->modelParameters[penaltyIndex]));
 }
 
-
-
-void initialize_model_param(int n,
-				int m,
-				int i,
-				int j,
-				struct model_struct * model,
-				double * y,
-				double var_y){
-
+void initializeGaussianModelParameters(int numberSamples,
+				int numberPenalizedFeatures,
+				int realizationIndex,
+				int penaltyIndex,
+				struct gaussianModelRealization * model,
+				double * responseVariable,
+				double responseVariance){
 
 	int k;
 
-	me(model,i,j)->beta_mu = (double *) malloc(sizeof(double)*m);
-	me(model,i,j)->beta_sigma = (double *) malloc(sizeof(double)*m);
-	me(model,i,j)->beta_chi = (double *) malloc(sizeof(double)*m);
-	me(model,i,j)->beta_p = (double *) malloc(sizeof(double)*m);
-	me(model,i,j)->e_beta = (double *) malloc(sizeof(double)*m);
-	me(model,i,j)->e_beta_sq = (double *) malloc(sizeof(double)*m);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaMu = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaSigmaSquared = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaChi = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaPosteriorProbability = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBeta = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBetaSquared = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
 
 
-	for(k=0;k<m;k++){
-		me(model,i,j)->beta_mu[k] = 0;
-		me(model,i,j)->beta_sigma[k] = 0;
-		me(model,i,j)->beta_chi[k]= 0;
-		me(model,i,j)->beta_p[k] = 0;
-		me(model,i,j)->e_beta[k] = 0;
-		me(model,i,j)->e_beta_sq[k] = 0;
+	for(k=0;k<numberPenalizedFeatures;k++){
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaMu[k] = 0;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaSigmaSquared[k] = 0;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaChi[k]= 0;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaPosteriorProbability[k] = 0;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBeta[k] = 0;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBetaSquared[k] = 0;
 	}
 
 
-	me(model,i,j)->sigma_e = var_y;
-	me(model,i,j)->lb = 0;
-	me(model,i,j)->p_sums = 0;
-	me(model,i,j)->entropy = 0;
-	me(model,i,j)->v_sums_correct = 0;
-	me(model,i,j)->w_vec = (double *) malloc(sizeof(double)*n);
-	me(model,i,j)->mu_vec = (double *) malloc(sizeof(double)*n);
-	me(model,i,j)->resid_vec = (double *) malloc(sizeof(double)*n);
-	me(model,i,j)->pred_vec_old = (double *) malloc(sizeof(double)*n);
-	me(model,i,j)->pred_vec_new = (double *) malloc(sizeof(double)*n);
-	me(model,i,j)->x_w = (double *) malloc(sizeof(double)*n);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->sigma_e = var_y;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->lb = 0;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->p_sums = 0;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->entropy = 0;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->v_sums_correct = 0;
+
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec = (double *) malloc(sizeof(double)*n);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_old = (double *) malloc(sizeof(double)*n);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_new = (double *) malloc(sizeof(double)*n);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->x_w = (double *) malloc(sizeof(double)*n);
 
 	for(k=0;k<n;k++){
-		me(model,i,j)->w_vec[k] = 0.25;
-		me(model,i,j)->mu_vec[k] = 0.5;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->w_vec[k] = 0.25;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->mu_vec[k] = 0.5;
 		switch(model->control_param.regressType){
 			case LINEAR:
-				me(model,i,j)->resid_vec[k] = y[k];
+				getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec[k] = y[k];
 				break;
 			case LOGISTIC:
-				me(model,i,j)->resid_vec[k] = (y[k] - 0.5)/(0.25);
+				getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec[k] = (y[k] - 0.5)/(0.25);
 				break;
 		}
-		me(model,i,j)->pred_vec_old[k] = 0;
-		me(model,i,j)->pred_vec_new[k] = 0;
-		me(model,i,j)->x_w[k]=0;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_old[k] = 0;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_new[k] = 0;
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->x_w[k]=0;
 	}
 
-	me(model,i,j)->ord_index = i;
-	me(model,i,j)->path_index = j;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->ord_index = i;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->path_index = j;
 }
 
-void free_model_param(struct model_struct * model, int i, int j){
+void free_model_param(struct gaussianModelRealization * model, int i, int j){
 
-	free(me(model,i,j)->beta_mu);
-	free(me(model,i,j)->beta_sigma);
-	free(me(model,i,j)->beta_chi);
-	free(me(model,i,j)->beta_p);
-	free(me(model,i,j)->e_beta);
-	free(me(model,i,j)->e_beta_sq);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaMu);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaSigmaSquared);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaChi);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaPosteriorProbability);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBeta);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBetaSquared);
 
-	free(me(model,i,j)->w_vec);
-	free(me(model,i,j)->mu_vec);
-	free(me(model,i,j)->resid_vec);
-	free(me(model,i,j)->pred_vec_old);
-	free(me(model,i,j)->pred_vec_new);
-	free(me(model,i,j)->x_w);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->w_vec);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->mu_vec);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_old);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_new);
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->x_w);
 
 }
 
-void process_data(struct model_struct * model){
+void process_data(struct gaussianModelRealization * model){
 	int j;
   int exc;
 	double nd = ((double) model->data.n);
@@ -115,48 +111,17 @@ void process_data(struct model_struct * model){
 			for(j=0;j<model->data.m;j++){
 			  exc = model->control_param.exclude[j];
 				if(exc==0){
-					scale_vector(xc(model,j),model->data.one_vec,model->data.n);
+					standardizeVector(extractPenalizedFeatureMatrixColumn(model,columnIndex),model->data.one_vec,model->data.n);
 				}
 				model->data.x_sum_sq[j] = nd - 1;
-			  //model->data.x_sum_sq[j]=compute_ssq(xc(model,j),model->data.n);
+			  //model->data.x_sum_sq[j]=vectorSumOfSquares(extractPenalizedFeatureMatrixColumn(model,columnIndex),model->data.n);
 			}
 			break;
 
 		case NOSCALE:
 			//Rprintf("Sum of squares pre-compute...\n");
 			for(j=0;j<model->data.m;j++){
-				model->data.x_sum_sq[j]=compute_ssq(xc(model,j),model->data.n);
-			}
-			break;
-	}
-
-
-}
-
-
-void process_data_marg(struct model_marg_struct * model){
-	int j;
-  int exc;
-	double nd = ((double) model->data.n);
-
-	switch(model->control_param.scaleType){
-
-		case SCALE:
-			//Rprintf("Scaling...\n");
-
-			for(j=0;j<model->data.m;j++){
-			  exc = model->control_param.exclude[j];
-				if(exc==0){
-					scale_vector(xcm(model,j),model->data.one_vec,model->data.n);
-				}
-				model->data.x_sum_sq[j] = nd - 1;
-			}
-			break;
-
-		case NOSCALE:
-			//Rprintf("Sum of squares pre-compute...\n");
-			for(j=0;j<model->data.m;j++){
-				model->data.x_sum_sq[j]=compute_ssq(xcm(model,j),model->data.n);
+				model->data.x_sum_sq[j]=vectorSumOfSquares(extractPenalizedFeatureMatrixColumn(model,columnIndex),model->data.n);
 			}
 			break;
 	}
@@ -186,7 +151,7 @@ void initialize_model(double * eps,
 					int * n,
 					int * m,
 					int * ordering_mat,
-					struct model_struct * model){
+					struct gaussianModelRealization * model){
 
 	//initialize: (*model).control_param;
 
@@ -221,8 +186,8 @@ void initialize_model(double * eps,
 		model->control_param.pb_path[k]=pb_path[k];
 	}
 
-	model->control_param.exclude = (int *) malloc(sizeof(int)*(*m));
-	model->control_param.penalty_factor = (double *) malloc(sizeof(double)*(*m));
+	model->control_param.exclude = (int *) malloc(sizeof(int)*(*numberPenalizedFeatures));
+	model->control_param.penalty_factor = (double *) malloc(sizeof(double)*(*numberPenalizedFeatures));
 	for(k=0;k<*m;k++){
 		model->control_param.exclude[k]=exclude[k];
 		model->control_param.penalty_factor[k]=penalty_factor[k];
@@ -268,12 +233,12 @@ void initialize_model(double * eps,
 	//struct single_mod *single_mods;
 	//single_mods= (single_mod *) malloc(sizeof(single_mod)*(n_order+1));
 
-	model->data.X = (struct matrix_v *) malloc(sizeof(struct matrix_v)*(*m));
-	for(k=0;k<(*m);k++){
+	model->data.X = (struct matrix_v *) malloc(sizeof(struct matrix_v)*(*numberPenalizedFeatures));
+	for(k=0;k<(*numberPenalizedFeatures);k++){
 		(&(model->data.X[k]))->col = (double *) malloc(sizeof(double)*(*n));
 	}
 
-	for(k=0;k<(*m);k++){
+	for(k=0;k<(*numberPenalizedFeatures);k++){
 		for(l=0;l<(*n);l++){
 			(&(model->data.X[k]))->col[l] = X[k*(*n)+l];
 		}
@@ -282,9 +247,9 @@ void initialize_model(double * eps,
 	model->data.y = y;
 	model->data.var_y = (*var_y);
 	model->data.n = (*n);
-	model->data.m = (*m);
+	model->data.m = (*numberPenalizedFeatures);
 	int (pii) =0;
-	for(k=0;k<(*m);k++){
+	for(k=0;k<(*numberPenalizedFeatures);k++){
 		//Rprintf("exclude[%d]:%d\n",k,exclude[k]);
 		if(exclude[k]==1){
 			//Rprintf("worked\n");
@@ -293,17 +258,17 @@ void initialize_model(double * eps,
 	}
 	model->data.p = (pii);
 	//Rprintf("model->data.p = %d\n",model->data.p);
-	model->data.x_sum_sq = (double *) malloc(sizeof(double)*(*m));
+	model->data.x_sum_sq = (double *) malloc(sizeof(double)*(*numberPenalizedFeatures));
 
 
 	model->data.ordering = (struct matrix_i *) malloc(sizeof(struct matrix_i)*(*n_orderings));
 	for(k=0;k<(*n_orderings);k++){
-		(&(model->data.ordering[k]))->col = (int *) malloc(sizeof(int)*(*m));
+		(&(model->data.ordering[k]))->col = (int *) malloc(sizeof(int)*(*numberPenalizedFeatures));
 	}
 
 	for(k=0;k<(*n_orderings);k++){
-		for(l=0;l<(*m);l++){
-			(&(model->data.ordering[k]))->col[l] = ordering_mat[k*(*m)+l];
+		for(l=0;l<(*numberPenalizedFeatures);l++){
+			(&(model->data.ordering[k]))->col[l] = ordering_mat[k*(*numberPenalizedFeatures)+l];
 		}
 	}
 
@@ -315,7 +280,7 @@ void initialize_model(double * eps,
 
 	process_data(model);
 
-	//initialize: (*model).me(model,i,j);
+	//initialize: (*model).getModelParameterRealization(model,realizationIndex,penaltyIndex);
 
 	model->order = (struct order_struct *) malloc(sizeof(struct order_struct)*(*n_orderings));
 	for(k=0;k<(*n_orderings);k++){
@@ -324,7 +289,7 @@ void initialize_model(double * eps,
 
 	for(k=0;k<(*n_orderings);k++){
 		for(l=0;l<(*path_length);l++){
-			initialize_model_param((*n),(*m),k,l,model,y,*var_y);
+			initialize_model_param((*n),(*numberPenalizedFeatures),k,l,model,y,*var_y);
 		}
 	}
 
@@ -333,122 +298,8 @@ void initialize_model(double * eps,
 
 
 
-void initialize_model_marg(double * eps,
-			int * exclude,
-			int * maxit,
-			int * regress,
-			int * scale,
-			double * X,
-			double * y,
-			double * var_y,
-			int * n,
-			int * m,
-			struct model_marg_struct * model){
 
-	int k,l;
-
-	//Rprintf("eps: %g\n",eps[0]);
-	//Rprintf("exclude[1]: %d\n",exclude[1]);
-	//Rprintf("maxit: %d\n",maxit[0]);
-	//Rprintf("regress: %d\n",regress[0]);
-	//Rprintf("scale: %d\n",scale[0]);
-	//Rprintf("X[0,0]: %g\n",X[0]);
-	//Rprintf("y[0]: %g\n",y[0]);
-	//Rprintf("var_y: %g\n",var_y[0]);
-	//Rprintf("n: %d\n",n[0]);
-	//Rprintf("m: %d\n",m[0]);
-
-
-	model->control_param.eps = (*eps);
-	model->control_param.exclude = (int *) malloc(sizeof(int)*(*m));
-	for(k=0;k<*m;k++){
-		model->control_param.exclude[k]=exclude[k];
-	}
-	model->control_param.maxit = (*maxit);
-	if((*regress)==1){
-		model->control_param.regressType = LINEAR;
-	} else{
-		model->control_param.regressType = LOGISTIC;
-	}
-
-	if((*scale)==1){
-		model->control_param.scaleType = SCALE;
-	} else{
-		model->control_param.scaleType = NOSCALE;
-	}
-
-	model->model_param.beta_mu = (double *) malloc(sizeof(double)*(*m));
-	model->model_param.beta_sigma = (double *) malloc(sizeof(double)*(*m));
-	model->model_param.beta_chi = (double *) malloc(sizeof(double)*(*m));
-	model->model_param.beta_p = (double *) malloc(sizeof(double)*(*m));
-	model->model_param.sigma_e = *var_y;
-
-
-	for(k=0;k<(*m);k++){
-		model->model_param.beta_mu[k] = 0;
-		model->model_param.beta_sigma[k] = 0;
-		model->model_param.beta_chi[k] = 0;
-		model->model_param.beta_p[k] = 0;
-	}
-
-	model->model_param.w_vec = (double *) malloc(sizeof(double)*(*n));
-	model->model_param.mu_vec = (double *) malloc(sizeof(double)*(*n));
-	model->model_param.resid_vec = (double *) malloc(sizeof(double)*(*n));
-	model->model_param.pred_vec_old = (double *) malloc(sizeof(double)*(*n));
-	model->model_param.pred_vec_new = (double *) malloc(sizeof(double)*(*n));
-	model->model_param.x_w = (double *) malloc(sizeof(double)*(*n));
-
-	for(k=0;k<(*n);k++){
-		model->model_param.w_vec[k] = 0.25;
-		model->model_param.mu_vec[k] = 0.5;
-		switch(model->control_param.regressType){
-			case LINEAR:
-				model->model_param.resid_vec[k] = y[k];
-				break;
-			case LOGISTIC:
-				model->model_param.resid_vec[k] = (y[k] - 0.5)/(0.25);
-				break;
-		}
-		model->model_param.pred_vec_old[k] = 0;
-		model->model_param.pred_vec_new[k] = 0;
-		model->model_param.x_w[k]=0;
-	}
-
-
-
-	model->data.X = (struct matrix_v *) malloc(sizeof(struct matrix_v)*(*m));
-	for(k=0;k<(*m);k++){
-		(&(model->data.X[k]))->col = (double *) malloc(sizeof(double)*(*n));
-	}
-
-	for(k=0;k<(*m);k++){
-		for(l=0;l<(*n);l++){
-			(&(model->data.X[k]))->col[l] = X[k*(*n)+l];
-		}
-	}
-
-	model->data.y = y;
-	model->data.var_y = (*var_y);
-	model->data.n = (*n);
-	model->data.m = (*m);
-	model->data.x_sum_sq = (double *) malloc(sizeof(double)*(*m));
-
-	model->data.one_vec = (double *) malloc(sizeof(double)*(*n));
-	for(k=0;k<(*n);k++){
-		model->data.one_vec[k]= 1.0;
-	}
-
-
-	process_data_marg(model);
-
-
-}
-
-
-
-
-
-void free_model(struct model_struct * model){
+void free_model(struct gaussianModelRealization * model){
 	//free X
 	int i,j,k;
 	for(k=0;k<(model->data.m);k++){
@@ -492,63 +343,32 @@ void free_model(struct model_struct * model){
 
 }
 
-void free_model_marg(struct model_marg_struct * model){
-
-	int k;
-
-	for(k=0;k<(model->data.m);k++){
-		free((&(model->data.X[k]))->col);
-
-	}
-	free(model->data.X);
-
-	free(model->model_param.beta_mu);
-	free(model->model_param.beta_sigma);
-	free(model->model_param.beta_chi);
-	free(model->model_param.beta_p);
-
-	free(model->model_param.w_vec);
-	free(model->model_param.mu_vec);
-	free(model->model_param.resid_vec);
-	free(model->model_param.pred_vec_old);
-	free(model->model_param.pred_vec_new);
-	free(model->model_param.x_w);
-
-	free(model->data.x_sum_sq);
-	free(model->data.one_vec);
-	free(model->control_param.exclude);
-
-
-}
-
-
-
-void copy_model_state(struct model_struct * model, int i, int j){
+void copy_model_state(struct gaussianModelRealization * model, int i, int j){
 	int k,l;
 	l = j-1;
 
 	for(k=0;k<model->data.m;k++){
-		me(model,i,j)->beta_mu[k] = me(model,i,l)->beta_mu[k];
-		me(model,i,j)->beta_sigma[k] = me(model,i,l)->beta_sigma[k];
-		me(model,i,j)->beta_chi[k] = me(model,i,l)->beta_chi[k];
-		me(model,i,j)->beta_p[k] = me(model,i,l)->beta_p[k];
-		me(model,i,j)->e_beta[k] = me(model,i,l)->e_beta[k];
-		me(model,i,j)->e_beta_sq[k] = me(model,i,l)->e_beta_sq[k];
+		getModelParameterRealization(model,i,j)->betaMu[k] = getModelParameterRealization(model,i,l)->betaMu[k];
+		getModelParameterRealization(model,i,j)->betaSigmaSquared[k] = getModelParameterRealization(model,i,l)->betaSigmaSquared[k];
+		getModelParameterRealization(model,i,j)->betaChi[k] = getModelParameterRealization(model,i,l)->betaChi[k];
+		getModelParameterRealization(model,i,j)->betaPosteriorProbability[k] = getModelParameterRealization(model,i,l)->betaPosteriorProbability[k];
+		getModelParameterRealization(model,i,j)->expectationBeta[k] = getModelParameterRealization(model,i,l)->expectationBeta[k];
+		getModelParameterRealization(model,i,j)->expectationBetaSquared[k] = getModelParameterRealization(model,i,l)->expectationBetaSquared[k];
 	}
 
 
-	me(model,i,j)->sigma_e = me(model,i,l)->sigma_e;
-	me(model,i,j)->lb = me(model,i,l)->lb;
-	me(model,i,j)->p_sums = me(model,i,l)->p_sums;
-	me(model,i,j)->entropy = me(model,i,l)->entropy;
-	me(model,i,j)->v_sums_correct = me(model,i,l)->v_sums_correct;
+	getModelParameterRealization(model,i,j)->sigma_e = getModelParameterRealization(model,i,l)->sigma_e;
+	getModelParameterRealization(model,i,j)->lb = getModelParameterRealization(model,i,l)->lb;
+	getModelParameterRealization(model,i,j)->p_sums = getModelParameterRealization(model,i,l)->p_sums;
+	getModelParameterRealization(model,i,j)->entropy = getModelParameterRealization(model,i,l)->entropy;
+	getModelParameterRealization(model,i,j)->v_sums_correct = getModelParameterRealization(model,i,l)->v_sums_correct;
 
 	for(k=0;k<model->data.n;k++){
-		me(model,i,j)->w_vec[k] = me(model,i,l)->w_vec[k];
-		me(model,i,j)->mu_vec[k] = me(model,i,l)->mu_vec[k];
-		me(model,i,j)->resid_vec[k] = me(model,i,l)->resid_vec[k];
-		me(model,i,j)->pred_vec_old[k] = me(model,i,l)->pred_vec_old[k];
-		me(model,i,j)->pred_vec_new[k] = me(model,i,l)->pred_vec_new[k];
+		getModelParameterRealization(model,i,j)->w_vec[k] = getModelParameterRealization(model,i,l)->w_vec[k];
+		getModelParameterRealization(model,i,j)->mu_vec[k] = getModelParameterRealization(model,i,l)->mu_vec[k];
+		getModelParameterRealization(model,i,j)->resid_vec[k] = getModelParameterRealization(model,i,l)->resid_vec[k];
+		getModelParameterRealization(model,i,j)->pred_vec_old[k] = getModelParameterRealization(model,i,l)->pred_vec_old[k];
+		getModelParameterRealization(model,i,j)->pred_vec_new[k] = getModelParameterRealization(model,i,l)->pred_vec_new[k];
 	}
 
 
@@ -557,14 +377,14 @@ void copy_model_state(struct model_struct * model, int i, int j){
 
 
 
-void update_beta(struct model_struct * model, int i, int j){
+void update_beta(struct gaussianModelRealization * model, int i, int j){
 
 	int k,l,exc,t;
 	double mu, sigma,prec, chi, p, e_b,e_b2,l0;
 
 
 	//if(model->control_param.max_pb==1){
-	//	l0 = me(model,i,j)->l0_max;
+	//	l0 = getModelParameterRealization(model,i,j)->l0_max;
 	//}else{
 		l0 = model->control_param.l0_path[j];
 	//}
@@ -582,17 +402,17 @@ void update_beta(struct model_struct * model, int i, int j){
 				//Rprintf("k: %d\n",k);
 				exc = model->control_param.exclude[k];
 				//Rprintf("exc: %d\n",exc);
-				ddot_w(model->data.n,xc(model,k),me(model,i,j)->resid_vec,&mu);
+				innerProduct(model->data.n,xc(model,k),getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec,&mu);
 				//Rprintf("mu: %g\n",mu);
 				//Rprintf("xumsq: %g, k: %d\n",model->data.x_sum_sq[k],k);
-				mu = mu + (model->data.x_sum_sq[k])*(me(model,i,j)->e_beta[k]);
+				mu = mu + (model->data.x_sum_sq[k])*(getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
 				//Rprintf("mu: %g\n",mu);
 				mu = mu/model->data.x_sum_sq[k];
 				//Rprintf("mu: %g\n",mu);
-				sigma = 1/((1/me(model,i,j)->sigma_e)*(model->data.x_sum_sq[k]));
+				sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e)*(model->data.x_sum_sq[k]));
 				//Rprintf("sigma: %g\n",sigma);
 				chi = pow(mu,2)/sigma;
-				//Rprintf("chi: %g, e_beta[%d]: %g\n",chi,k,me(model,i,j)->e_beta[k]);
+				//Rprintf("chi: %g, expectationBeta[%d]: %g\n",chi,k,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
 				if(exc==0){
 					p = 1/(1+exp(-0.5*(chi+l0+log(sigma))));
 					e_b = p*mu;
@@ -607,25 +427,25 @@ void update_beta(struct model_struct * model, int i, int j){
 
 
 				if(exc==0){
-				  me(model,i,j)->v_sums_correct = me(model,i,j)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
-				  me(model,i,j)->p_sums = me(model,i,j)->p_sums + p;
+				  getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct = getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
+				  getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums = getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums + p;
 				  if(p>1-1e-10){
-				    me(model,i,j)->entropy = me(model,i,j)->entropy - p*log(p) + (1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+				    getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy - p*log(p) + (1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				  }else if(p<1e-10){
-				    me(model,i,j)->entropy = me(model,i,j)->entropy + p - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+				    getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy + p - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				  } else {
-				    me(model,i,j)->entropy = me(model,i,j)->entropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+				    getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				  }
 				}
 
-				daxpy_w(model->data.n,xc(model,k),me(model,i,j)->resid_vec,me(model,i,j)->e_beta[k]-e_b);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]-e_b);
 
-				me(model,i,j)->beta_mu[k] = mu;
-				me(model,i,j)->beta_sigma[k] = sigma;
-				me(model,i,j)->beta_chi[k] = mu/sqrt(sigma);
-				me(model,i,j)->e_beta[k] = e_b;
-				me(model,i,j)->e_beta_sq[k] = e_b2;
-				me(model,i,j)->beta_p[k] = p;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->betaMu[k] = mu;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->betaSigmaSquared[k] = sigma;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->betaChi[k] = mu/sqrt(sigma);
+				getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k] = e_b;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBetaSquared[k] = e_b2;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->betaPosteriorProbability[k] = p;
 			}
 			break;
 		case LOGISTIC:
@@ -633,7 +453,7 @@ void update_beta(struct model_struct * model, int i, int j){
 			for(l=0;l< model->data.m ;l++){
 				k = (&(model->data.ordering[i]))->col[l];
 				for(t=0; t< model->data.n;t++){
-					me(model,i,j)->x_w[t] = ((xc(model,k))[t])*(me(model,i,j)->w_vec[t]);
+					getModelParameterRealization(realizationIndex,penaltyIndex)->x_w[t] = ((xc(model,k))[t])*(getModelParameterRealization(realizationIndex,penaltyIndex)->w_vec[t]);
 				}
 
 				//k = l;
@@ -641,19 +461,19 @@ void update_beta(struct model_struct * model, int i, int j){
 				exc = model->control_param.exclude[k];
 				//exc = 1;
 				//Rprintf("exc: %d\n",exc);
-				//sigma = 1/((1/me(model,i,j)->sigma_e)*(model->data.x_sum_sq[k]));
-				ddot_w(model->data.n,me(model,i,j)->x_w,xc(model,k),&prec);
+				//sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e)*(model->data.x_sum_sq[k]));
+				innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->x_w,xc(model,k),&prec);
 				sigma = 1/prec;
 				//Rprintf("sigma: %g\n",sigma);
-				ddot_w(model->data.n,me(model,i,j)->x_w,me(model,i,j)->resid_vec,&mu);
+				innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->x_w,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,&mu);
 				//Rprintf("mu: %g\n",mu);
-				mu = mu + prec*(me(model,i,j)->e_beta[k]);
+				mu = mu + prec*(getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
 				//Rprintf("mu: %g\n",mu);
 				mu = mu/prec;
 				//Rprintf("mu: %g\n",mu);
 
 				chi = pow(mu,2)/sigma;
-				//Rprintf("chi: %g, e_beta[%d]: %g\n",chi,k,me(model,i,j)->e_beta[k]);
+				//Rprintf("chi: %g, expectationBeta[%d]: %g\n",chi,k,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
 				if(exc==0){
 					p = 1/(1+exp(-0.5*(chi+l0+log(sigma))));
 					e_b = p*mu;
@@ -666,25 +486,25 @@ void update_beta(struct model_struct * model, int i, int j){
 					//Rprintf("p: %g, e_b: %g, e_b2: %g\n",p,e_b,e_b2);
 				}
 
-				me(model,i,j)->p_sums = me(model,i,j)->p_sums + p;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums = getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums + p;
 				if(p>1-1e-10){
-					me(model,i,j)->entropy = me(model,i,j)->entropy - p*log(p) + (1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+					getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy - p*log(p) + (1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				}else if(p<1e-10){
-					me(model,i,j)->entropy = me(model,i,j)->entropy + p - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+					getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy + p - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				} else {
-					me(model,i,j)->entropy = me(model,i,j)->entropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+					getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				}
-				//me(model,i,j)->v_sums_correct = me(model,i,j)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
+				//getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct = getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
 
-				daxpy_w(model->data.n,xc(model,k),me(model,i,j)->resid_vec,me(model,i,j)->e_beta[k]-e_b);
-				daxpy_w(model->data.n,xc(model,k),me(model,i,j)->pred_vec_new,e_b - me(model,i,j)->e_beta[k]);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]-e_b);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new,e_b - getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
 
-				me(model,i,j)->beta_mu[k] = mu;
-				me(model,i,j)->beta_sigma[k] = sigma;
-				me(model,i,j)->beta_chi[k] = mu/sqrt(sigma);
-				me(model,i,j)->e_beta[k] = e_b;
-				me(model,i,j)->e_beta_sq[k] = e_b2;
-				me(model,i,j)->beta_p[k] = p;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->betaMu[k] = mu;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->betaSigmaSquared[k] = sigma;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->betaChi[k] = mu/sqrt(sigma);
+				getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k] = e_b;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta_sq[k] = e_b2;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->betaPosteriorProbability[k] = p;
 			}
 
 			break;
@@ -694,133 +514,7 @@ void update_beta(struct model_struct * model, int i, int j){
 
 }
 
-
-
-void update_beta_marg(struct model_marg_struct * model, int * use_vec,int cv){
-
-	int k,l,exc,t;
-	double mu, sigma,prec, p, e_b;
-  //double l0, e_b2, chi;
-
-	//l0 = model->control_param.l0_path[j];
-	//Rprintf("l0: %g\n",l0);
-	//Rprintf("m: %d\n",model->data.m);
-
-	switch (model->control_param.regressType){
-
-
-		case LINEAR:
-			//run linear updates
-			for(l=0;l<cv;l++){
-				//k = (&(model->data.ordering[i]))->col[l];
-				k = use_vec[l];
-				//k = l;
-				//Rprintf("k: %d\n",k);
-				exc = model->control_param.exclude[k];
-				//Rprintf("exc: %d\n",exc);
-				ddot_w(model->data.n,xcm(model,k),model->model_param.resid_vec,&mu);
-				//Rprintf("mu: %g\n",mu);
-				mu = mu + (model->data.x_sum_sq[k])*(model->model_param.beta_mu[k]);
-				//Rprintf("mu: %g\n",mu);
-				mu = mu/model->data.x_sum_sq[k];
-				//Rprintf("mu: %g\n",mu);
-				sigma = 1/((1/model->model_param.sigma_e)*(model->data.x_sum_sq[k]));
-				//Rprintf("sigma: %g\n",sigma);
-				//chi = pow(mu,2)/sigma;
-				//Rprintf("chi: %g, e_beta[%d]: %g\n",chi,k,me(model,i,j)->e_beta[k]);
-				if(exc==0){
-					//p = 1/(1+exp(-0.5*(chi+l0+log(sigma))));
-					p =0;
-					//e_b = p*mu;
-					e_b = mu;
-					//e_b2 = p*(pow(mu,2)+sigma);
-					//e_b2 = pow(mu,2);
-					//Rprintf("p: %g, e_b: %g, e_b2: %g, k: %d\n",p,e_b,e_b2,k);
-				}else{
-					p = 0;
-					e_b = mu;
-					//e_b2 = pow(mu,2);
-					//Rprintf("p: %g, e_b: %g, e_b2: %g, k: %d\n",p,e_b,e_b2,k);
-				}
-
-				//me(model,i,j)->p_sums = me(model,i,j)->p_sums + p;
-				//me(model,i,j)->v_sums_correct = me(model,i,j)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
-
-				daxpy_w(model->data.n,xcm(model,k),model->model_param.resid_vec,model->model_param.beta_mu[k]-e_b);
-        //Rprintf("daxpy\n");
-				model->model_param.beta_mu[k] = mu;
-        //Rprintf("mu\n");
-				model->model_param.beta_sigma[k] = sigma;
-        //Rprintf("sigma\n");
-				model->model_param.beta_chi[k] = mu/sqrt(sigma);
-        //Rprintf("chi\n");
-				model->model_param.beta_p[k] = p;
-        //Rprintf("p\n");
-			}
-			break;
-		case LOGISTIC:
-			//run logistic updates
-			for(l=0;l<cv;l++){
-				//k = (&(model->data.ordering[i]))->col[l];
-				k = use_vec[l];
-				for(t=0; t< model->data.n;t++){
-					model->model_param.x_w[t] = ((xcm(model,k))[t])*(model->model_param.w_vec[t]);
-				}
-
-				//k = l;
-				//Rprintf("k: %d\n",k);
-				exc = model->control_param.exclude[k];
-				//exc = 1;
-				//Rprintf("exc: %d\n",exc);
-				//sigma = 1/((1/me(model,i,j)->sigma_e)*(model->data.x_sum_sq[k]));
-				ddot_w(model->data.n,model->model_param.x_w,xcm(model,k),&prec);
-				sigma = 1/prec;
-				//Rprintf("sigma: %g\n",sigma);
-				ddot_w(model->data.n,model->model_param.x_w,model->model_param.resid_vec,&mu);
-				//Rprintf("mu: %g\n",mu);
-				mu = mu + prec*(model->model_param.beta_mu[k]);
-				//Rprintf("mu: %g\n",mu);
-				mu = mu/prec;
-				//Rprintf("mu: %g\n",mu);
-
-				//chi = pow(mu,2)/sigma;
-				//Rprintf("chi: %g, e_beta[%d]: %g\n",chi,k,me(model,i,j)->e_beta[k]);
-				if(exc==0){
-					//p = 1/(1+exp(-0.5*(chi+l0+log(sigma))));
-					p =0;
-					//e_b = p*mu;
-					e_b = mu;
-					//e_b2 = p*(pow(mu,2)+sigma);
-					//e_b2 = pow(mu,2);
-					//Rprintf("p: %g, e_b: %g, e_b2: %g, sigma: %g, k: %d\n",p,e_b,e_b2,sigma,k);
-				}else{
-					p = 0;
-					e_b = mu;
-					//e_b2 = pow(mu,2);
-					//Rprintf("p: %g, e_b: %g, e_b2: %g, sigma: %g, k: %d\n",p,e_b,e_b2,sigma,k);
-				}
-
-				//me(model,i,j)->p_sums = me(model,i,j)->p_sums + p;
-				//me(model,i,j)->v_sums_correct = me(model,i,j)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
-
-				daxpy_w(model->data.n,xcm(model,k),model->model_param.resid_vec,model->model_param.beta_mu[k]-e_b);
-				daxpy_w(model->data.n,xcm(model,k),model->model_param.pred_vec_new,e_b - model->model_param.beta_mu[k]);
-
-				model->model_param.beta_mu[k] = mu;
-				model->model_param.beta_sigma[k] = sigma;
-				model->model_param.beta_chi[k] = mu/sqrt(sigma);
-				model->model_param.beta_p[k] = p;
-			}
-
-			break;
-
-	}
-
-
-}
-
-
-void update_error(struct model_struct * model, int i, int j){
+void update_error(struct gaussianModelRealization * model, int i, int j){
 
 	int t;
 	double U;
@@ -830,16 +524,16 @@ void update_error(struct model_struct * model, int i, int j){
 
 		case LINEAR:
 
-			ddot_w(model->data.n,me(model,i,j)->resid_vec,me(model,i,j)->resid_vec,&U);
+			innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,&U);
 		  //Rprintf("U pre correction: %g\n",U);
-			U = U - me(model,i,j)->v_sums_correct;
-		  //Rprintf("U post correction: %g, correction factor: %g\n",U, me(model,i,j)->v_sums_correct);
+			U = U - getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct;
+		  //Rprintf("U post correction: %g, correction factor: %g\n",U, getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct);
 
 			U = U/nd;
 		  //Rprintf("U post division: %g\n",U);
-			me(model,i,j)->sigma_e = U;
-		  //Rprintf("sigma_e: %g\n",me(model,i,j)->sigma_e);
-      //me(model,i,j)->sigma_e = 1.0;
+			getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e = U;
+		  //Rprintf("sigma_e: %g\n",getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e);
+      //getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e = 1.0;
                         //Rprintf("no segfault\n");
 			if(!R_FINITE(U)){
 				free_model(model);
@@ -854,11 +548,11 @@ void update_error(struct model_struct * model, int i, int j){
 			////
 			for(t=0;t<model->data.n;t++){
 
-				me(model,i,j)->mu_vec[t] = 1/(1+exp(-me(model,i,j)->pred_vec_new[t]));
-				me(model,i,j)->w_vec[t] = me(model,i,j)->mu_vec[t]*(1-me(model,i,j)->mu_vec[t]);
-				me(model,i,j)->resid_vec[t] = (model->data.y[t]-me(model,i,j)->mu_vec[t])/me(model,i,j)->w_vec[t];
-				me(model,i,j)->pred_vec_old[t] = me(model,i,j)->pred_vec_new[t];
-				if(me(model,i,j)->mu_vec[t]==1 || me(model,i,j)->mu_vec[t] ==0){
+				getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t] = 1/(1+exp(-getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new[t]));
+				getModelParameterRealization(realizationIndex,penaltyIndex)->w_vec[t] = getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t]*(1-getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t]);
+				getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec[t] = (model->data.y[t]-getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t])/getModelParameterRealization(realizationIndex,penaltyIndex)->w_vec[t];
+				getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_old[t] = getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new[t];
+				if(getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t]==1 || getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t] ==0){
 					//Rprintf("OVERFIT\n");
 					free_model(model);
 					error("Penalized logistic solution does not exist.\n");
@@ -870,69 +564,24 @@ void update_error(struct model_struct * model, int i, int j){
 
 	}
 
-
-
 }
 
-
-void update_error_marg(struct model_marg_struct * model){
-
-	int t;
-	double U;
-	double nd = (double) model->data.n;
-
-	switch(model->control_param.regressType){
-
-		case LINEAR:
-
-			ddot_w(model->data.n,model->model_param.resid_vec,model->model_param.resid_vec,&U);
-			//U = U - me(model,i,j)->v_sums_correct;
-			U = U/nd;
-			model->model_param.sigma_e = U;
-			if(!R_FINITE(U)){error("Penalized linear solution does not exist.\n");}
-
-			break;
-
-		case LOGISTIC:
-			////
-			for(t=0;t<model->data.n;t++){
-
-				model->model_param.mu_vec[t] = 1/(1+exp(-model->model_param.pred_vec_new[t]));
-				model->model_param.w_vec[t] = model->model_param.mu_vec[t]*(1-model->model_param.mu_vec[t]);
-				model->model_param.resid_vec[t] = (model->data.y[t]-model->model_param.mu_vec[t])/model->model_param.w_vec[t];
-				model->model_param.pred_vec_old[t] = model->model_param.pred_vec_new[t];
-				if(model->model_param.mu_vec[t]==1 || model->model_param.mu_vec[t] ==0){
-					//Rprintf("OVERFIT\n");
-					error("Penalized logistic solution does not exist.\n");
-				}
-
-			}
-
-			break;
-
-	}
-
-
-
-}
-
-
-//void update_p_beta(struct model_struct * model, int i, int j){
+//void update_p_beta(struct gaussianModelRealization * model, int i, int j){
 
 //	double md = (double) model->data.m;
 //	double pd = (double) model->data.p;
 //	double p_beta, l0;
 //
-//	p_beta = (me(model,i,j)->p_sums)/(md-pd);
-//	//Rprintf("pd:%g, p_sums: %g, p_beta: %g, md: %g\n",pd,me(model,i,j)->p_sums,p_beta,md);
+//	p_beta = (getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums)/(md-pd);
+//	//Rprintf("pd:%g, p_sums: %g, p_beta: %g, md: %g\n",pd,getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums,p_beta,md);
 //	l0 = 2*(log(p_beta)-log(1-p_beta));
-//	me(model,i,j)->p_max = p_beta;
-//	me(model,i,j)->l0_max = l0;
+//	getModelParameterRealization(realizationIndex,penaltyIndex)->p_max = p_beta;
+//	getModelParameterRealization(realizationIndex,penaltyIndex)->l0_max = l0;
 //
 //
 //}
 
-void update_lb(struct model_struct * model, int i, int j){
+void update_lb(struct gaussianModelRealization * model, int i, int j){
 
 	double lba;
 	double nd = (double) model->data.n;
@@ -941,7 +590,7 @@ void update_lb(struct model_struct * model, int i, int j){
 	md = md - pd;
 	double p_beta;
 	//if(model->control_param.max_pb==1){
-	//	p_beta = me(model,i,j)->p_max;
+	//	p_beta = getModelParameterRealization(realizationIndex,penaltyIndex)->p_max;
 	//}else{
 		p_beta = model->control_param.pb_path[j];
 	//}
@@ -951,34 +600,34 @@ void update_lb(struct model_struct * model, int i, int j){
 	switch(model->control_param.regressType){
 
 		case LINEAR:
-      ddot_w(model->data.n,me(model,i,j)->resid_vec,me(model,i,j)->resid_vec,&U);
-			U = U - me(model,i,j)->v_sums_correct;
+      innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,&U);
+			U = U - getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct;
       //Rprintf("here\n");
-			lba = -0.5*nd*(log(2*M_PI*me(model,i,j)->sigma_e) + 1);
+			lba = -0.5*nd*(log(2*M_PI*getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e) + 1);
 			//Rprintf("lba: %g\n",lba);
-			lba = lba + log(p_beta)*(me(model,i,j)->p_sums);
+			lba = lba + log(p_beta)*(getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums);
 			//Rprintf("lba: %g\n",md);
-			lba = lba + log(1-p_beta)*(md - me(model,i,j)->p_sums);
+			lba = lba + log(1-p_beta)*(md - getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums);
 			//Rprintf("lba: %g\n",lba);
-			lba = lba + me(model,i,j)->entropy;
+			lba = lba + getModelParameterRealization(realizationIndex,penaltyIndex)->entropy;
 			//Rprintf("lba: %g\n",lba);
-			//Rprintf("Entropy: %g\n",me(model,i,j)->entropy);
-			me(model,i,j)->lb = lba;
+			//Rprintf("Entropy: %g\n",getModelParameterRealization(realizationIndex,penaltyIndex)->entropy);
+			getModelParameterRealization(realizationIndex,penaltyIndex)->lb = lba;
 
 			break;
 
 		case LOGISTIC:
 			////
 
-			//lba = -0.5*(log(me(model,i,j)->sigma_e)+1);
-			ddot_w(model->data.n,model->data.y,me(model,i,j)->pred_vec_new,&lba);
+			//lba = -0.5*(log(getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e)+1);
+			innerProduct(model->data.n,model->data.y,getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new,&lba);
 			for(t=0;t<model->data.n;t++){
-				lba = lba + log(1-me(model,i,j)->mu_vec[t]);
+				lba = lba + log(1-getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t]);
 			}
-			lba = lba + log(p_beta)*(me(model,i,j)->p_sums);
-			lba = lba + log(1-p_beta)*(md - me(model,i,j)->p_sums);
-			lba = lba + me(model,i,j)->entropy;
-			me(model,i,j)->lb = lba;
+			lba = lba + log(p_beta)*(getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums);
+			lba = lba + log(1-p_beta)*(md - getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums);
+			lba = lba + getModelParameterRealization(realizationIndex,penaltyIndex)->entropy;
+			getModelParameterRealization(realizationIndex,penaltyIndex)->lb = lba;
 
 			break;
 
@@ -988,51 +637,7 @@ void update_lb(struct model_struct * model, int i, int j){
 
 }
 
-
-void update_lb_marg(struct model_marg_struct * model){
-
-
-
-	double lba;
-	//double nd = (double) model->data.n;
-	//double md = (double) model->data.m;
-	int t;
-
-	switch(model->control_param.regressType){
-
-		case LINEAR:
-
-			lba = -0.5*(log(model->model_param.sigma_e)+1);
-			//lba = lba + (model->control_param.pb_path[j])*(me(model,i,j)->p_sums);
-			//lba = lba + (1-model->control_param.pb_path[j])*(md - me(model,i,j)->p_sums);
-			//me(model,i,j)->lb = lba;
-			model->model_param.lb = lba;
-
-			break;
-
-		case LOGISTIC:
-			////
-
-			//lba = -0.5*(log(me(model,i,j)->sigma_e)+1);
-			ddot_w(model->data.n,model->data.y,model->model_param.pred_vec_new,&lba);
-			for(t=0;t<model->data.n;t++){
-				lba = lba + log(1-model->model_param.mu_vec[t]);
-			}
-			//lba = lba + (model->control_param.pb_path[j])*(me(model,i,j)->p_sums);
-			//lba = lba + (1-model->control_param.pb_path[j])*(md - me(model,i,j)->p_sums);
-			//me(model,i,j)->lb = lba;
-			model->model_param.lb = lba;
-
-			break;
-
-	}
-
-
-
-}
-
-
-void run_vbsr(struct model_struct * model){
+void run_vbsr(struct gaussianModelRealization * model){
 	int i,j;
 	double tol=1;
 	double lb_old;
@@ -1047,10 +652,10 @@ void run_vbsr(struct model_struct * model){
 			}
 			while(fabs(tol) > model->control_param.eps && count < model->control_param.maxit){
 
-				me(model,i,j)->p_sums = 0;
-				me(model,i,j)->v_sums_correct = 0;
-				me(model,i,j)->entropy = 0;
-				lb_old = me(model,i,j)->lb;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums = 0;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct = 0;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = 0;
+				lb_old = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
 				//Rprintf("Updating beta...\n");
 				update_beta(model,i,j);
 
@@ -1058,11 +663,11 @@ void run_vbsr(struct model_struct * model){
 				//	update_p_beta(model,i,j);
 				//}
 				//Rprintf("Updating error...\n");
-				//Rprintf("entropy: %g\n",me(model,i,j)->entropy);
+				//Rprintf("entropy: %g\n",getModelParameterRealization(realizationIndex,penaltyIndex)->entropy);
 				update_error(model,i,j);
 				//Rprintf("Updating lower bound...\n");
 				update_lb(model,i,j);
-				tol = lb_old - me(model,i,j)->lb;
+				tol = lb_old - getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
 				count = count+1;
 
 			}
@@ -1076,92 +681,6 @@ void run_vbsr(struct model_struct * model){
 	}
 
 }
-
-void run_marg(struct model_marg_struct * model){
-	int j,k,cv,q;
-	double tol=1;
-	double lb_old;
-	int count = 0;
-	//#pragma omp parallel for
-	//for (i=0;i < model->control_param.n_orderings;i++){
-	//	for(j=0;j < model->control_param.path_length;j++){
-	//		if(j>0){
-				//copy the previous path to the new path
-	//			copy_model_state(model,i,j);
-				//Rprintf("Copied model state...\n");
-	//		}
-
-	for (j=0;j<model->data.m;j++){
-		if(model->control_param.exclude[j]==1){count = count +1;}
-	}
-	cv = count+1;
-	count = 0;
-	int * use_vec = (int *) malloc(sizeof(int)*(cv));
-	for(j=0;j<model->data.m;j++){
-		if(model->control_param.exclude[j]==1){
-			use_vec[count+1] = j;
-			count = count +1;
-		}
-	}
-
-
-	for(j=0;j<model->data.m;j++){
-
-		if(model->control_param.exclude[j]==0){
-			for(k=0;k<model->data.n;k++){
-				switch(model->control_param.regressType){
-					case LINEAR:
-						model->model_param.resid_vec[k] = model->data.y[k];
-
-						break;
-					case LOGISTIC:
-						model->model_param.resid_vec[k] = (model->data.y[k] - 0.5)/(0.25);
-						model->model_param.w_vec[k] = 0.25;
-						model->model_param.mu_vec[k] = 0.5;
-						model->model_param.pred_vec_old[k] = 0;
-						model->model_param.pred_vec_new[k] = 0;
-						break;
-				}
-
-			}
-			tol =1;
-			count = 0;
-			//Rprintf("JJJJJ: %d\n",j);
-			use_vec[0] = j;
-			//set fixed covariates to zero!
-			for (q=1;q<cv;q++){
-				model->model_param.beta_mu[use_vec[q]] = 0;
-				model->model_param.beta_sigma[use_vec[q]] = 0;
-				model->model_param.beta_chi[use_vec[q]] = 0;
-				model->model_param.beta_p[use_vec[q]] = 0;
-			}
-			model->model_param.lb = 0;
-			while(fabs(tol) > model->control_param.eps && count < model->control_param.maxit){
-				//me(model,i,j)->p_sums = 0;
-				//me(model,i,j)->v_sums_correct = 0;
-				lb_old = model->model_param.lb;
-				//Rprintf("Updating beta...\n");
-				update_beta_marg(model,use_vec,cv);
-				//Rprintf("Updating error...\n");
-				update_error_marg(model);
-				//Rprintf("Updating lower bound...\n");
-				update_lb_marg(model);
-				tol = lb_old - model->model_param.lb;
-				count = count+1;
-			}
-			if(count>=model->control_param.maxit){
-				warning("Maximum iterations exceeded!\n");
-			}
-		}
-	}
-	//Rprintf("lb: %g,i: %d, j: %d\n",lb_old,i,j);
-
-	free(use_vec);
-	//count =0;
-	//tol = 1;
-
-}
-
 
 void identify_unique(double * lb_t, double * post_p, int n,double tol){
 	int i,j,count;
@@ -1192,7 +711,7 @@ void identify_unique(double * lb_t, double * post_p, int n,double tol){
 	//Rprintf("Identified: %d unique models\n",count);
 }
 
-void compute_bma_correct(struct model_struct * model,int k,double * post_prob,double * s_bma,int j){
+void compute_bma_correct(struct gaussianModelRealization * model,int k,double * post_prob,double * s_bma,int j){
 	int t,l;
 	double corv;
 	s_bma[0] = 0;
@@ -1211,11 +730,11 @@ void compute_bma_correct(struct model_struct * model,int k,double * post_prob,do
 	for(t=0;t<model->control_param.n_orderings-1;t++){
 		for(l=t+1;l<model->control_param.n_orderings;l++){
 			if(post_prob[t]>0 && post_prob[l]>0){
-				daxpy_w(model->data.n,xc(model,k),me(model,t,j)->resid_vec,me(model,t,j)->e_beta[k]);
-				daxpy_w(model->data.n,xc(model,k),me(model,l,j)->resid_vec,me(model,l,j)->e_beta[k]);
-				cor(me(model,t,j)->resid_vec, me(model,l,j)->resid_vec, model->data.one_vec,&corv,model->data.n);
-				daxpy_w(model->data.n,xc(model,k),me(model,t,j)->resid_vec,-me(model,t,j)->e_beta[k]);
-				daxpy_w(model->data.n,xc(model,k),me(model,l,j)->resid_vec,-me(model,l,j)->e_beta[k]);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,t,j)->resid_vec,getModelParameterRealization(model,t,j)->expectationBeta[k]);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,l,j)->resid_vec,getModelParameterRealization(model,l,j)->expectationBeta[k]);
+				cor(getModelParameterRealization(model,t,j)->resid_vec, getModelParameterRealization(model,l,j)->resid_vec, model->data.one_vec,&corv,model->data.n);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,t,j)->resid_vec,-getModelParameterRealization(model,t,j)->expectationBeta[k]);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,l,j)->resid_vec,-getModelParameterRealization(model,l,j)->expectationBeta[k]);
 				s_bma[0] = s_bma[0] + 2*post_prob[t]*post_prob[l]*(corv);
 				//if(j==2 && k==0){Rprintf("correction: %g %g %g %g\n",s_bma[0],corv,post_prob[t],post_prob[l]);}
 			}
@@ -1229,7 +748,7 @@ void compute_bma_correct(struct model_struct * model,int k,double * post_prob,do
 }
 
 
-void collapse_results(struct model_struct * model,
+void collapse_results(struct gaussianModelRealization * model,
 						double * beta_chi_mat,
 						double * beta_mu_mat,
 						double * beta_sigma_mat,
@@ -1246,7 +765,7 @@ void collapse_results(struct model_struct * model,
 	int w_max;
 	//if(model->control_param.max_pb==1){
 	//	for(i=0;i<model->control_param.n_orderings;i++){
-	//		p_est[i]=me(model,i,0)->p_max;
+	//		p_est[i]=getModelParameterRealization(model,i,0)->p_max;
 	//	}
 	//}
 
@@ -1255,25 +774,25 @@ void collapse_results(struct model_struct * model,
 
 		case BMA:
 			for(j=0;j<model->control_param.path_length;j++){
-				max_v = me(model,0,j)->lb;
+				max_v = getModelParameterRealization(model,0,j)->lb;
 				w_max = 0;
 				Z =0;
 				for(i=0;i<model->control_param.n_orderings;i++){
-					if(me(model,i,j)->lb > max_v){
-						max_v = me(model,i,j)->lb;
+					if(getModelParameterRealization(realizationIndex,penaltyIndex)->lb > max_v){
+						max_v = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
 						w_max = i;
 					}
-					lb_mat[(model->control_param.n_orderings)*(j)+i] = me(model,i,j)->lb;
-					lb_t[i] = me(model,i,j)->lb;
+					lb_mat[(model->control_param.n_orderings)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
+					lb_t[i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
 				}
 				for(i=0;i<model->control_param.n_orderings;i++){
-					Z = Z + exp(me(model,i,j)->lb-max_v);
+					Z = Z + exp(getModelParameterRealization(realizationIndex,penaltyIndex)->lb-max_v);
 				}
 				for(i=0;i<model->control_param.n_orderings;i++){
-					post_prob[i] = exp(me(model,i,j)->lb-max_v)/Z;
+					post_prob[i] = exp(getModelParameterRealization(realizationIndex,penaltyIndex)->lb-max_v)/Z;
 					//Rprintf("post_prob[%d]: %g\t",i,post_prob[i]);
 					//lb_mat[(model->control_param.n_orderings)*(j)+i] = post_prob[i];
-					//bm = bm + post_prob*me(model,i,j)->beta_chi
+					//bm = bm + post_prob*getModelParameterRealization(realizationIndex,penaltyIndex)->betaChi
 				}
 				//Rprintf("\n");
 
@@ -1298,11 +817,11 @@ void collapse_results(struct model_struct * model,
 					}
 
 					for(i=0;i<model->control_param.n_orderings;i++){
-						bc = bc+ post_prob[i]*me(model,i,j)->beta_chi[k];
-						bm = bm+ post_prob[i]*me(model,i,j)->beta_mu[k];
-						bs = bs+ post_prob[i]*me(model,i,j)->beta_sigma[k];
-						eb = eb+ post_prob[i]*me(model,i,j)->e_beta[k];
-						bp = bp+ post_prob[i]*me(model,i,j)->beta_p[k];
+						bc = bc+ post_prob[i]*getModelParameterRealization(realizationIndex,penaltyIndex)->betaChi[k];
+						bm = bm+ post_prob[i]*getModelParameterRealization(realizationIndex,penaltyIndex)->betaMu[k];
+						bs = bs+ post_prob[i]*getModelParameterRealization(realizationIndex,penaltyIndex)->betaSigmaSquared[k];
+						eb = eb+ post_prob[i]*getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k];
+						bp = bp+ post_prob[i]*getModelParameterRealization(realizationIndex,penaltyIndex)->betaPosteriorProbability[k];
 					}
 					beta_chi_mat[(model->data.m)*(j)+k] = bc/sqrt(s_bma);
 					beta_mu_mat[(model->data.m)*(j)+k] = bm;
@@ -1317,21 +836,21 @@ void collapse_results(struct model_struct * model,
 		case MAXIMAL:
 			////
 			for(j=0;j<model->control_param.path_length;j++){
-				max_v = me(model,0,j)->lb;
+				max_v = getModelParameterRealization(model,0,j)->lb;
 				w_max = 0;
 				for(i=0;i<model->control_param.n_orderings;i++){
-					if(me(model,i,j)->lb > max_v){
-						max_v = me(model,i,j)->lb;
+					if(getModelParameterRealization(realizationIndex,penaltyIndex)->lb > max_v){
+						max_v = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
 						w_max = i;
 					}
-					lb_mat[(model->control_param.n_orderings)*(j)+i] = me(model,i,j)->lb;
+					lb_mat[(model->control_param.n_orderings)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
 				}
 				for(k=0;k<model->data.m;k++){
-					beta_chi_mat[(model->data.m)*(j)+k] = me(model,w_max,j)->beta_chi[k];
-					beta_mu_mat[(model->data.m)*(j)+k] = me(model,w_max,j)->beta_mu[k];
-					beta_sigma_mat[(model->data.m)*(j)+k] = me(model,w_max,j)->beta_sigma[k];
-					e_beta_mat[(model->data.m)*(j)+k] = me(model,w_max,j)->e_beta[k];
-					beta_p_mat[(model->data.m)*(j)+k] = me(model,w_max,j)->beta_p[k];
+					beta_chi_mat[(model->data.m)*(j)+k] = getModelParameterRealization(model,w_max,j)->betaChi[k];
+					beta_mu_mat[(model->data.m)*(j)+k] = getModelParameterRealization(model,w_max,j)->betaMu[k];
+					beta_sigma_mat[(model->data.m)*(j)+k] = getModelParameterRealization(model,w_max,j)->betaSigmaSquared[k];
+					e_beta_mat[(model->data.m)*(j)+k] = getModelParameterRealization(model,w_max,j)->expectationBeta[k];
+					beta_p_mat[(model->data.m)*(j)+k] = getModelParameterRealization(model,w_max,j)->betaPosteriorProbability[k];
 				}
 			}
 			break;
@@ -1344,53 +863,6 @@ void collapse_results(struct model_struct * model,
 	}
 	free(post_prob);
 	free(lb_t);
-
-}
-
-void collapse_results_marg(struct model_marg_struct * model,
-							double * beta_chi,
-							double * beta_mu,
-							double * beta_sigma,
-							double * beta_p,
-							double * lb){
-
-
-	int j;
-	*lb = model->model_param.lb;
-	for(j=0;j<model->data.m;j++){
-		beta_chi[j]=model->model_param.beta_chi[j];
-		beta_mu[j]=model->model_param.beta_mu[j];
-		beta_sigma[j]=model->model_param.beta_sigma[j];
-		beta_p[j]=model->model_param.beta_p[j];
-	}
-}
-
-void run_marg_analysis(double * eps,
-			int * exclude,
-			int * maxit,
-			int * regress,
-			int * scale,
-			double * X,
-			double * y,
-			double * var_y,
-			int * n,
-			int * m,
-			double * beta_chi,
-			double * beta_mu,
-			double * beta_sigma,
-			double * beta_p,
-			double * lb){
-
-
-	struct model_marg_struct model;
-	//Rprintf("Initializing marginal analysis...\n");
-	initialize_model_marg(eps,exclude,maxit,regress,scale,X,y,var_y,n,m,&model);
-	//Rprintf("Initialized marginal model...\n");
-	run_marg(&model);
-	//Rprintf("Model run...\n");
-	collapse_results_marg(&model,beta_chi,beta_mu,beta_sigma,beta_p,lb);
-	free_model_marg(&model);
-
 
 }
 
