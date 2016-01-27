@@ -49,59 +49,36 @@ void initializeGaussianModelParameters(int numberSamples,
 	}
 
 
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->sigma_e = var_y;
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->lb = 0;
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->p_sums = 0;
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->entropy = 0;
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->v_sums_correct = 0;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->sigmaSquaredError = var_y;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->lowerBound = 0;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities = 0;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = 0;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = 0;
 
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec = (double *) malloc(sizeof(double)*n);
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_old = (double *) malloc(sizeof(double)*n);
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_new = (double *) malloc(sizeof(double)*n);
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->x_w = (double *) malloc(sizeof(double)*n);
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->residualVector = (double *) malloc(sizeof(double)*numberSamples);
 
-	for(k=0;k<n;k++){
-		getModelParameterRealization(model,realizationIndex,penaltyIndex)->w_vec[k] = 0.25;
-		getModelParameterRealization(model,realizationIndex,penaltyIndex)->mu_vec[k] = 0.5;
-		switch(model->control_param.regressType){
-			case LINEAR:
-				getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec[k] = y[k];
-				break;
-			case LOGISTIC:
-				getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec[k] = (y[k] - 0.5)/(0.25);
-				break;
-		}
-		getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_old[k] = 0;
-		getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_new[k] = 0;
-		getModelParameterRealization(model,realizationIndex,penaltyIndex)->x_w[k]=0;
+	for(k=0;k<numberSamples;k++){
+		getModelParameterRealization(model,realizationIndex,penaltyIndex)->residualVector[k] = y[k];
 	}
 
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->ord_index = i;
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->path_index = j;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->realizationIndex = realizationIndex;
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->penaltyIndex = penaltyIndex;
 }
 
-void free_model_param(struct gaussianModelRealization * model, int i, int j){
-
+void freeGaussianModelParameters(struct gaussianModelRealization * model, int realizationIndex, int penaltyIndex){
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaMu);
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaSigmaSquared);
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaChi);
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaPosteriorProbability);
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBeta);
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBetaSquared);
-
-	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->w_vec);
-	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->mu_vec);
-	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec);
-	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_old);
-	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->pred_vec_new);
-	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->x_w);
-
+	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->residualVector);
 }
 
-void process_data(struct gaussianModelRealization * model){
+void dataStandardization(struct gaussianModelRealization * model){
 	int j;
   int exc;
-	double nd = ((double) model->data.n);
+	double nd = ((double) model->data.numberSamples);
 	switch(model->control_param.scaleType){
 
 		case SCALE:
@@ -357,16 +334,16 @@ void copy_model_state(struct gaussianModelRealization * model, int i, int j){
 	}
 
 
-	getModelParameterRealization(model,i,j)->sigma_e = getModelParameterRealization(model,i,l)->sigma_e;
-	getModelParameterRealization(model,i,j)->lb = getModelParameterRealization(model,i,l)->lb;
-	getModelParameterRealization(model,i,j)->p_sums = getModelParameterRealization(model,i,l)->p_sums;
-	getModelParameterRealization(model,i,j)->entropy = getModelParameterRealization(model,i,l)->entropy;
-	getModelParameterRealization(model,i,j)->v_sums_correct = getModelParameterRealization(model,i,l)->v_sums_correct;
+	getModelParameterRealization(model,i,j)->sigmaSquaredError = getModelParameterRealization(model,i,l)->sigmaSquaredError;
+	getModelParameterRealization(model,i,j)->lowerBound = getModelParameterRealization(model,i,l)->lowerBound;
+	getModelParameterRealization(model,i,j)->sumOfBetaPosteriorProbabilities = getModelParameterRealization(model,i,l)->sumOfBetaPosteriorProbabilities;
+	getModelParameterRealization(model,i,j)->posteriorProbabilityEntropy = getModelParameterRealization(model,i,l)->posteriorProbabilityEntropy;
+	getModelParameterRealization(model,i,j)->betaSquaredExpectationCorrection = getModelParameterRealization(model,i,l)->betaSquaredExpectationCorrection;
 
 	for(k=0;k<model->data.n;k++){
 		getModelParameterRealization(model,i,j)->w_vec[k] = getModelParameterRealization(model,i,l)->w_vec[k];
 		getModelParameterRealization(model,i,j)->mu_vec[k] = getModelParameterRealization(model,i,l)->mu_vec[k];
-		getModelParameterRealization(model,i,j)->resid_vec[k] = getModelParameterRealization(model,i,l)->resid_vec[k];
+		getModelParameterRealization(model,i,j)->residualVector[k] = getModelParameterRealization(model,i,l)->residualVector[k];
 		getModelParameterRealization(model,i,j)->pred_vec_old[k] = getModelParameterRealization(model,i,l)->pred_vec_old[k];
 		getModelParameterRealization(model,i,j)->pred_vec_new[k] = getModelParameterRealization(model,i,l)->pred_vec_new[k];
 	}
@@ -402,14 +379,14 @@ void update_beta(struct gaussianModelRealization * model, int i, int j){
 				//Rprintf("k: %d\n",k);
 				exc = model->control_param.exclude[k];
 				//Rprintf("exc: %d\n",exc);
-				innerProduct(model->data.n,xc(model,k),getModelParameterRealization(model,realizationIndex,penaltyIndex)->resid_vec,&mu);
+				innerProduct(model->data.n,xc(model,k),getModelParameterRealization(model,realizationIndex,penaltyIndex)->residualVector,&mu);
 				//Rprintf("mu: %g\n",mu);
 				//Rprintf("xumsq: %g, k: %d\n",model->data.x_sum_sq[k],k);
 				mu = mu + (model->data.x_sum_sq[k])*(getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
 				//Rprintf("mu: %g\n",mu);
 				mu = mu/model->data.x_sum_sq[k];
 				//Rprintf("mu: %g\n",mu);
-				sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e)*(model->data.x_sum_sq[k]));
+				sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError)*(model->data.x_sum_sq[k]));
 				//Rprintf("sigma: %g\n",sigma);
 				chi = pow(mu,2)/sigma;
 				//Rprintf("chi: %g, expectationBeta[%d]: %g\n",chi,k,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
@@ -427,18 +404,18 @@ void update_beta(struct gaussianModelRealization * model, int i, int j){
 
 
 				if(exc==0){
-				  getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct = getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
-				  getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums = getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums + p;
+				  getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
+				  getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities = getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities + p;
 				  if(p>1-1e-10){
-				    getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy - p*log(p) + (1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+				    getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy - p*log(p) + (1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				  }else if(p<1e-10){
-				    getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy + p - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+				    getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy + p - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				  } else {
-				    getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+				    getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				  }
 				}
 
-				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]-e_b);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]-e_b);
 
 				getModelParameterRealization(realizationIndex,penaltyIndex)->betaMu[k] = mu;
 				getModelParameterRealization(realizationIndex,penaltyIndex)->betaSigmaSquared[k] = sigma;
@@ -461,11 +438,11 @@ void update_beta(struct gaussianModelRealization * model, int i, int j){
 				exc = model->control_param.exclude[k];
 				//exc = 1;
 				//Rprintf("exc: %d\n",exc);
-				//sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e)*(model->data.x_sum_sq[k]));
+				//sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError)*(model->data.x_sum_sq[k]));
 				innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->x_w,xc(model,k),&prec);
 				sigma = 1/prec;
 				//Rprintf("sigma: %g\n",sigma);
-				innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->x_w,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,&mu);
+				innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->x_w,getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,&mu);
 				//Rprintf("mu: %g\n",mu);
 				mu = mu + prec*(getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
 				//Rprintf("mu: %g\n",mu);
@@ -486,17 +463,17 @@ void update_beta(struct gaussianModelRealization * model, int i, int j){
 					//Rprintf("p: %g, e_b: %g, e_b2: %g\n",p,e_b,e_b2);
 				}
 
-				getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums = getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums + p;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities = getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities + p;
 				if(p>1-1e-10){
-					getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy - p*log(p) + (1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+					getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy - p*log(p) + (1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				}else if(p<1e-10){
-					getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy + p - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+					getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy + p - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				} else {
-					getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = getModelParameterRealization(realizationIndex,penaltyIndex)->entropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
+					getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				}
-				//getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct = getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
+				//getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
 
-				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]-e_b);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]-e_b);
 				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new,e_b - getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
 
 				getModelParameterRealization(realizationIndex,penaltyIndex)->betaMu[k] = mu;
@@ -524,16 +501,16 @@ void update_error(struct gaussianModelRealization * model, int i, int j){
 
 		case LINEAR:
 
-			innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,&U);
+			innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,&U);
 		  //Rprintf("U pre correction: %g\n",U);
-			U = U - getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct;
-		  //Rprintf("U post correction: %g, correction factor: %g\n",U, getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct);
+			U = U - getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection;
+		  //Rprintf("U post correction: %g, correction factor: %g\n",U, getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection);
 
 			U = U/nd;
 		  //Rprintf("U post division: %g\n",U);
-			getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e = U;
-		  //Rprintf("sigma_e: %g\n",getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e);
-      //getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e = 1.0;
+			getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError = U;
+		  //Rprintf("sigmaSquaredError: %g\n",getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError);
+      //getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError = 1.0;
                         //Rprintf("no segfault\n");
 			if(!R_FINITE(U)){
 				free_model(model);
@@ -550,7 +527,7 @@ void update_error(struct gaussianModelRealization * model, int i, int j){
 
 				getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t] = 1/(1+exp(-getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new[t]));
 				getModelParameterRealization(realizationIndex,penaltyIndex)->w_vec[t] = getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t]*(1-getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t]);
-				getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec[t] = (model->data.y[t]-getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t])/getModelParameterRealization(realizationIndex,penaltyIndex)->w_vec[t];
+				getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector[t] = (model->data.y[t]-getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t])/getModelParameterRealization(realizationIndex,penaltyIndex)->w_vec[t];
 				getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_old[t] = getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new[t];
 				if(getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t]==1 || getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t] ==0){
 					//Rprintf("OVERFIT\n");
@@ -572,8 +549,8 @@ void update_error(struct gaussianModelRealization * model, int i, int j){
 //	double pd = (double) model->data.p;
 //	double p_beta, l0;
 //
-//	p_beta = (getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums)/(md-pd);
-//	//Rprintf("pd:%g, p_sums: %g, p_beta: %g, md: %g\n",pd,getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums,p_beta,md);
+//	p_beta = (getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities)/(md-pd);
+//	//Rprintf("pd:%g, sumOfBetaPosteriorProbabilities: %g, p_beta: %g, md: %g\n",pd,getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities,p_beta,md);
 //	l0 = 2*(log(p_beta)-log(1-p_beta));
 //	getModelParameterRealization(realizationIndex,penaltyIndex)->p_max = p_beta;
 //	getModelParameterRealization(realizationIndex,penaltyIndex)->l0_max = l0;
@@ -581,7 +558,7 @@ void update_error(struct gaussianModelRealization * model, int i, int j){
 //
 //}
 
-void update_lb(struct gaussianModelRealization * model, int i, int j){
+void update_lowerBound(struct gaussianModelRealization * model, int i, int j){
 
 	double lba;
 	double nd = (double) model->data.n;
@@ -600,34 +577,34 @@ void update_lb(struct gaussianModelRealization * model, int i, int j){
 	switch(model->control_param.regressType){
 
 		case LINEAR:
-      innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,getModelParameterRealization(realizationIndex,penaltyIndex)->resid_vec,&U);
-			U = U - getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct;
+      innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,&U);
+			U = U - getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection;
       //Rprintf("here\n");
-			lba = -0.5*nd*(log(2*M_PI*getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e) + 1);
+			lba = -0.5*nd*(log(2*M_PI*getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError) + 1);
 			//Rprintf("lba: %g\n",lba);
-			lba = lba + log(p_beta)*(getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums);
+			lba = lba + log(p_beta)*(getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities);
 			//Rprintf("lba: %g\n",md);
-			lba = lba + log(1-p_beta)*(md - getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums);
+			lba = lba + log(1-p_beta)*(md - getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities);
 			//Rprintf("lba: %g\n",lba);
-			lba = lba + getModelParameterRealization(realizationIndex,penaltyIndex)->entropy;
+			lba = lba + getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy;
 			//Rprintf("lba: %g\n",lba);
-			//Rprintf("Entropy: %g\n",getModelParameterRealization(realizationIndex,penaltyIndex)->entropy);
-			getModelParameterRealization(realizationIndex,penaltyIndex)->lb = lba;
+			//Rprintf("posteriorProbabilityEntropy: %g\n",getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy);
+			getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound = lba;
 
 			break;
 
 		case LOGISTIC:
 			////
 
-			//lba = -0.5*(log(getModelParameterRealization(realizationIndex,penaltyIndex)->sigma_e)+1);
+			//lba = -0.5*(log(getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError)+1);
 			innerProduct(model->data.n,model->data.y,getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new,&lba);
 			for(t=0;t<model->data.n;t++){
 				lba = lba + log(1-getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t]);
 			}
-			lba = lba + log(p_beta)*(getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums);
-			lba = lba + log(1-p_beta)*(md - getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums);
-			lba = lba + getModelParameterRealization(realizationIndex,penaltyIndex)->entropy;
-			getModelParameterRealization(realizationIndex,penaltyIndex)->lb = lba;
+			lba = lba + log(p_beta)*(getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities);
+			lba = lba + log(1-p_beta)*(md - getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities);
+			lba = lba + getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy;
+			getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound = lba;
 
 			break;
 
@@ -640,7 +617,7 @@ void update_lb(struct gaussianModelRealization * model, int i, int j){
 void run_vbsr(struct gaussianModelRealization * model){
 	int i,j;
 	double tol=1;
-	double lb_old;
+	double lowerBound_old;
 	int count = 0;
 	//#pragma omp parallel for private(i,j,count,tol,lb_old)
 	for (i=0;i < model->control_param.n_orderings;i++){
@@ -652,10 +629,10 @@ void run_vbsr(struct gaussianModelRealization * model){
 			}
 			while(fabs(tol) > model->control_param.eps && count < model->control_param.maxit){
 
-				getModelParameterRealization(realizationIndex,penaltyIndex)->p_sums = 0;
-				getModelParameterRealization(realizationIndex,penaltyIndex)->v_sums_correct = 0;
-				getModelParameterRealization(realizationIndex,penaltyIndex)->entropy = 0;
-				lb_old = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities = 0;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = 0;
+				getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = 0;
+				lb_old = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 				//Rprintf("Updating beta...\n");
 				update_beta(model,i,j);
 
@@ -663,15 +640,15 @@ void run_vbsr(struct gaussianModelRealization * model){
 				//	update_p_beta(model,i,j);
 				//}
 				//Rprintf("Updating error...\n");
-				//Rprintf("entropy: %g\n",getModelParameterRealization(realizationIndex,penaltyIndex)->entropy);
+				//Rprintf("posteriorProbabilityEntropy: %g\n",getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy);
 				update_error(model,i,j);
 				//Rprintf("Updating lower bound...\n");
 				update_lb(model,i,j);
-				tol = lb_old - getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
+				tol = lb_old - getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 				count = count+1;
 
 			}
-			//Rprintf("lb: %g,i: %d, j: %d\n",lb_old,i,j);
+			//Rprintf("lowerBound: %g,i: %d, j: %d\n",lb_old,i,j);
 			if(count>=model->control_param.maxit){
 				Rprintf("Maximum iterations exceeded!\n");
 			}
@@ -730,11 +707,11 @@ void compute_bma_correct(struct gaussianModelRealization * model,int k,double * 
 	for(t=0;t<model->control_param.n_orderings-1;t++){
 		for(l=t+1;l<model->control_param.n_orderings;l++){
 			if(post_prob[t]>0 && post_prob[l]>0){
-				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,t,j)->resid_vec,getModelParameterRealization(model,t,j)->expectationBeta[k]);
-				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,l,j)->resid_vec,getModelParameterRealization(model,l,j)->expectationBeta[k]);
-				cor(getModelParameterRealization(model,t,j)->resid_vec, getModelParameterRealization(model,l,j)->resid_vec, model->data.one_vec,&corv,model->data.n);
-				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,t,j)->resid_vec,-getModelParameterRealization(model,t,j)->expectationBeta[k]);
-				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,l,j)->resid_vec,-getModelParameterRealization(model,l,j)->expectationBeta[k]);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,t,j)->residualVector,getModelParameterRealization(model,t,j)->expectationBeta[k]);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,l,j)->residualVector,getModelParameterRealization(model,l,j)->expectationBeta[k]);
+				cor(getModelParameterRealization(model,t,j)->residualVector, getModelParameterRealization(model,l,j)->residualVector, model->data.one_vec,&corv,model->data.n);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,t,j)->residualVector,-getModelParameterRealization(model,t,j)->expectationBeta[k]);
+				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,l,j)->residualVector,-getModelParameterRealization(model,l,j)->expectationBeta[k]);
 				s_bma[0] = s_bma[0] + 2*post_prob[t]*post_prob[l]*(corv);
 				//if(j==2 && k==0){Rprintf("correction: %g %g %g %g\n",s_bma[0],corv,post_prob[t],post_prob[l]);}
 			}
@@ -774,22 +751,22 @@ void collapse_results(struct gaussianModelRealization * model,
 
 		case BMA:
 			for(j=0;j<model->control_param.path_length;j++){
-				max_v = getModelParameterRealization(model,0,j)->lb;
+				max_v = getModelParameterRealization(model,0,j)->lowerBound;
 				w_max = 0;
 				Z =0;
 				for(i=0;i<model->control_param.n_orderings;i++){
-					if(getModelParameterRealization(realizationIndex,penaltyIndex)->lb > max_v){
-						max_v = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
+					if(getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound > max_v){
+						max_v = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 						w_max = i;
 					}
-					lb_mat[(model->control_param.n_orderings)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
-					lb_t[i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
+					lb_mat[(model->control_param.n_orderings)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
+					lb_t[i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 				}
 				for(i=0;i<model->control_param.n_orderings;i++){
-					Z = Z + exp(getModelParameterRealization(realizationIndex,penaltyIndex)->lb-max_v);
+					Z = Z + exp(getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound-max_v);
 				}
 				for(i=0;i<model->control_param.n_orderings;i++){
-					post_prob[i] = exp(getModelParameterRealization(realizationIndex,penaltyIndex)->lb-max_v)/Z;
+					post_prob[i] = exp(getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound-max_v)/Z;
 					//Rprintf("post_prob[%d]: %g\t",i,post_prob[i]);
 					//lb_mat[(model->control_param.n_orderings)*(j)+i] = post_prob[i];
 					//bm = bm + post_prob*getModelParameterRealization(realizationIndex,penaltyIndex)->betaChi
@@ -836,14 +813,14 @@ void collapse_results(struct gaussianModelRealization * model,
 		case MAXIMAL:
 			////
 			for(j=0;j<model->control_param.path_length;j++){
-				max_v = getModelParameterRealization(model,0,j)->lb;
+				max_v = getModelParameterRealization(model,0,j)->lowerBound;
 				w_max = 0;
 				for(i=0;i<model->control_param.n_orderings;i++){
-					if(getModelParameterRealization(realizationIndex,penaltyIndex)->lb > max_v){
-						max_v = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
+					if(getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound > max_v){
+						max_v = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 						w_max = i;
 					}
-					lb_mat[(model->control_param.n_orderings)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lb;
+					lb_mat[(model->control_param.n_orderings)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 				}
 				for(k=0;k<model->data.m;k++){
 					beta_chi_mat[(model->data.m)*(j)+k] = getModelParameterRealization(model,w_max,j)->betaChi[k];

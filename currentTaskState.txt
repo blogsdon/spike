@@ -102,3 +102,6 @@ Z <- unpenalizedDataMatrix
 
 January 21, 2016
 still working on the general clean up of vbsr code
+
+January 25, 2016
+working on code clean up!
