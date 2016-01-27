@@ -1,23 +1,24 @@
-//generalized variational Bayes spike regression (vbsr) R package C library
+//gaussian variational Bayes spike regression (vbsr) R package C library
 //Copyright 2016 Benjamin A Logsdon
 #include "gaussianVariationalBayesSpikeRegression.h"
 
-//xc: return jth column of data matrix x
 double * extractPenalizedFeatureMatrixColumn(struct gaussianModelRealization * model,
 	int columnIndex){
+		//return the pointer to the columnIndex^th column of the penalizedDataMatrix
 	return (&(model->data.penalizedDataMatrix[columnIndex]))->column;
 }
 
-//oc: return jth column of ordering matrix "ordering"
+
 int * extractRealizationMatrixColumn(struct gaussianModelRealization * model,
 	int columnIndex){
+		//return the pointer to the columnIndex^th column of the realizationMatrix update ordering matrix
 	return (&(model->data.realizationMatrix[columnIndex]))->column;
 }
 
-//me: return the ith, jth element of the ordering, path model parameters
 struct gaussianModelRealization * getModelParameterRealization(struct gaussianModelRealization * model,
 	 int realizationIndex,
 	 int penaltyIndex){
+		 //return the pointer to the struct for the realiationIndex^th, penaltyIndex^th model parameters
 	return (&((&(model->modelParameterRealization[realizationIndex]))->modelParameters[penaltyIndex]));
 }
 
@@ -28,17 +29,29 @@ void initializeGaussianModelParameters(int numberSamples,
 				struct gaussianModelRealization * model,
 				double * responseVariable,
 				double responseVariance){
-
+				//initialize the Gaussian spike model parameters
+				//integer k: update iterator
 	int k;
 
+	//malloc space for beta mu parameters aka I cast a spell of malloc
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaMu = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+
+	//malloc space for beta sigmat squared parameters
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaSigmaSquared = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+
+	//malloc space for the test statistic parameters
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaChi = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+
+	//malloc space for the posterior probability parameter
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaPosteriorProbability = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+
+	//malloc space for the expectation parameters
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBeta = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
+
+	//malloc space for the expectation of beta^2 parameters
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBetaSquared = (double *) malloc(sizeof(double)*numberPenalizedFeatures);
 
-
+	//initialize all the relevant model parameters to 0.0
 	for(k=0;k<numberPenalizedFeatures;k++){
 		getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaMu[k] = 0;
 		getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaSigmaSquared[k] = 0;
@@ -48,66 +61,84 @@ void initializeGaussianModelParameters(int numberSamples,
 		getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBetaSquared[k] = 0;
 	}
 
+	//initialize error variance parameter
+	getModelParameterRealization(model,realizationIndex,penaltyIndex)->sigmaSquaredError = responseVariance;
 
-	getModelParameterRealization(model,realizationIndex,penaltyIndex)->sigmaSquaredError = var_y;
+	//initialize lower bound
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->lowerBound = 0;
+
+	//initialize sum of the beta posterior probabilities
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities = 0;
+
+	//initialize the posterior probability entropy
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = 0;
+
+	//initialize the correction for the beta squared error expectations
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = 0;
 
+	//malloc space for the residualVector
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->residualVector = (double *) malloc(sizeof(double)*numberSamples);
 
+	//initialize the residualVector to the model where all effects are zero
 	for(k=0;k<numberSamples;k++){
 		getModelParameterRealization(model,realizationIndex,penaltyIndex)->residualVector[k] = y[k];
 	}
 
+	//set the realization index of the current model parameter realization
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->realizationIndex = realizationIndex;
+
+	//set the penalty index of the current model parameter realization
 	getModelParameterRealization(model,realizationIndex,penaltyIndex)->penaltyIndex = penaltyIndex;
 }
 
 void freeGaussianModelParameters(struct gaussianModelRealization * model, int realizationIndex, int penaltyIndex){
+	//free the memory associated with the beta mu parameters
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaMu);
+
+	//free the memory associated with the beta sigma squared parameters
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaSigmaSquared);
+
+	//free the memory associated with the betachi parameters
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaChi);
+
+	//free the memory associated with the posterior probability of beta parameters
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->betaPosteriorProbability);
+
+	//free the memory associated with the expectation of beta parameters
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBeta);
+
+	//free the memory associated with the expectation of beta squared parameters
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->expectationBetaSquared);
+
+	//free the memory associatedw tith the residual vector state
 	free(getModelParameterRealization(model,realizationIndex,penaltyIndex)->residualVector);
 }
 
 void dataStandardization(struct gaussianModelRealization * model){
+	//standardize the data if necessary and precompute the sum of squares (l2norm^2) of each column
+
+	//integer j: iterator
 	int j;
-  int exc;
-	double nd = ((double) model->data.numberSamples);
-	switch(model->control_param.scaleType){
 
-		case SCALE:
-			Rprintf("Scaling...\n");
-		  Rprintf("m: %d\n",model->data.m);
+	//double doubleNumberSamples: double version of number of samples
+	double doubleNumberSamples = ((double) model->data.numberSamples);
 
-			for(j=0;j<model->data.m;j++){
-			  exc = model->control_param.exclude[j];
-				if(exc==0){
-					standardizeVector(extractPenalizedFeatureMatrixColumn(model,columnIndex),model->data.one_vec,model->data.n);
-				}
-				model->data.x_sum_sq[j] = nd - 1;
-			  //model->data.x_sum_sq[j]=vectorSumOfSquares(extractPenalizedFeatureMatrixColumn(model,columnIndex),model->data.n);
+	if(model->modelState.scaleFeatureMatrix==0){
+		//if standardizing, then standardize
+			for(j=0;j<model->data.numberPenalizedFeatures;j++){
+				standardizeVector(extractPenalizedFeatureMatrixColumn(model,j),model->data.onesVector,model->data.numberSamples);
+				model->data.penalizedDataMatrixColumnSumOfSquares[j] = doubleNumberSamples - 1;
 			}
-			break;
-
-		case NOSCALE:
-			//Rprintf("Sum of squares pre-compute...\n");
-			for(j=0;j<model->data.m;j++){
-				model->data.x_sum_sq[j]=vectorSumOfSquares(extractPenalizedFeatureMatrixColumn(model,columnIndex),model->data.n);
+	}else{
+			//if not, just precompute the vector of sum squares
+			for(j=0;j<model->data.numberPenalizedFeatures;j++){
+				model->data.penalizedDataMatrixColumnSumOfSquares[j]=vectorSumOfSquares(extractPenalizedFeatureMatrixColumn(model,columnIndex),model->data.numberSamples);
 			}
-			break;
 	}
-
-
 }
 
 
-void initialize_model(double * eps,
+void initializeGaussianModel(double * epsilon,
 					double * l0_path,
 					double * pb_path,
 					int * exclude,
@@ -132,7 +163,7 @@ void initialize_model(double * eps,
 
 	//initialize: (*model).control_param;
 
-	//Rprintf("eps: %g\n",eps[0]);
+	//Rprintf("epsilon: %g\n",epsilon[0]);
 	//Rprintf("l0_path[0]: %g\n",l0_path[0]);
 	//Rprintf("pb_path[0]: %g\n",pb_path[0]);
 	//Rprintf("exclude[1]: %d\n",exclude[1]);
@@ -154,7 +185,7 @@ void initialize_model(double * eps,
 	//Rprintf("ordering_mat[0]: %d\n",ordering_mat[0]);
 
 	int k,l;
-	model->control_param.eps = (*eps);
+	model->control_param.epsilon = (*epsilon);
 	//model->control_param.max_pb = (*max_pb);
 	model->control_param.l0_path = (double *) malloc(sizeof(double)*(*path_length));
 	model->control_param.pb_path = (double *) malloc(sizeof(double)*(*path_length));
@@ -249,9 +280,9 @@ void initialize_model(double * eps,
 		}
 	}
 
-	model->data.one_vec = (double *) malloc(sizeof(double)*(*n));
+	model->data.onesVector = (double *) malloc(sizeof(double)*(*n));
 	for(k=0;k<(*n);k++){
-		model->data.one_vec[k]= 1.0;
+		model->data.onesVector[k]= 1.0;
 	}
 
 
@@ -308,9 +339,9 @@ void free_model(struct gaussianModelRealization * model){
 
 	free(model->data.x_sum_sq);
 
-	//free one_vec
+	//free onesVector
 
-	free(model->data.one_vec);
+	free(model->data.onesVector);
 
 	free(model->control_param.l0_path);
 	free(model->control_param.pb_path);
@@ -627,7 +658,7 @@ void run_vbsr(struct gaussianModelRealization * model){
 				copy_model_state(model,i,j);
 				//Rprintf("Copied model state...\n");
 			}
-			while(fabs(tol) > model->control_param.eps && count < model->control_param.maxit){
+			while(fabs(tol) > model->control_param.epsilon && count < model->control_param.maxit){
 
 				getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities = 0;
 				getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = 0;
@@ -709,7 +740,7 @@ void compute_bma_correct(struct gaussianModelRealization * model,int k,double * 
 			if(post_prob[t]>0 && post_prob[l]>0){
 				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,t,j)->residualVector,getModelParameterRealization(model,t,j)->expectationBeta[k]);
 				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,l,j)->residualVector,getModelParameterRealization(model,l,j)->expectationBeta[k]);
-				cor(getModelParameterRealization(model,t,j)->residualVector, getModelParameterRealization(model,l,j)->residualVector, model->data.one_vec,&corv,model->data.n);
+				cor(getModelParameterRealization(model,t,j)->residualVector, getModelParameterRealization(model,l,j)->residualVector, model->data.onesVector,&corv,model->data.n);
 				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,t,j)->residualVector,-getModelParameterRealization(model,t,j)->expectationBeta[k]);
 				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,l,j)->residualVector,-getModelParameterRealization(model,l,j)->expectationBeta[k]);
 				s_bma[0] = s_bma[0] + 2*post_prob[t]*post_prob[l]*(corv);
@@ -773,7 +804,7 @@ void collapse_results(struct gaussianModelRealization * model,
 				}
 				//Rprintf("\n");
 
-				identify_unique(lb_t,post_prob,model->control_param.n_orderings,model->control_param.eps*10);
+				identify_unique(lb_t,post_prob,model->control_param.n_orderings,model->control_param.epsilon*10);
 
 				for(k=0;k<model->data.m;k++){
 					bc =0;
@@ -843,7 +874,7 @@ void collapse_results(struct gaussianModelRealization * model,
 
 }
 
-void run_vbsr_wrapper(double * eps,
+void run_vbsr_wrapper(double * epsilon,
 			double * l0_path,
 			double * pb_path,
 			int * exclude,
@@ -878,7 +909,7 @@ void run_vbsr_wrapper(double * eps,
 	//omp_set_num_threads(*nthreads);
 	//Rprintf("nthreads: %d, nthreads_o: %d\n",*nthreads,omp_get_max_threads());
 	//Rprintf("Initializing model...\n");
-	initialize_model(eps,l0_path,pb_path,exclude,penalty_factor,maxit,path_length,n_orderings,regress,scale,est,error,kl,approx,total_replicates,X, y, var_y, n, m,ordering_mat,&model);
+	initialize_model(epsilon,l0_path,pb_path,exclude,penalty_factor,maxit,path_length,n_orderings,regress,scale,est,error,kl,approx,total_replicates,X, y, var_y, n, m,ordering_mat,&model);
 	//Rprintf("Initialized model...\n");
 	run_vbsr(&model);
 	//Rprintf("Model run...\n");

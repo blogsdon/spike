@@ -1,4 +1,4 @@
-//generalized variational Bayes spike regression (vbsr) R package C library declarations
+//gaussian variational Bayes spike regression (vbsr) R package C library declarations
 //Copyright 2016, Benjamin A Logsdon
 
 
