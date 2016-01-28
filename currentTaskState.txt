@@ -105,3 +105,6 @@ still working on the general clean up of vbsr code
 
 January 25, 2016
 working on code clean up!
+
+January 27, 2016
+code clean up
