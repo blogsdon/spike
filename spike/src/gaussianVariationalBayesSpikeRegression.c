@@ -11,7 +11,7 @@ double * extractPenalizedFeatureMatrixColumn(struct gaussianModelRealization * m
 
 int * extractRealizationMatrixColumn(struct gaussianModelRealization * model,
 	int columnIndex){
-		//return the pointer to the columnIndex^th column of the realizationMatrix update ordering matrix
+		//return the pointer to the columnIndex^th column of the realizationMatrix update realizationMatrix matrix
 	return (&(model->data.realizationMatrix[columnIndex]))->column;
 }
 
@@ -139,214 +139,192 @@ void dataStandardization(struct gaussianModelRealization * model){
 
 
 void initializeGaussianModel(double * epsilon,
-					double * l0_path,
-					double * pb_path,
-					int * exclude,
-					double * penalty_factor,
-					int * maxit,
-					int * path_length,
-					int * n_orderings,
+					double * l0Vector,
+					double * priorProbabilityVector,
+					int * penalizeVariable,
+					double * featureColumnScalingFactor,
+					int * maximumIterations,
+					int * l0VectorLength,
+					int * numberOfRealizations,
 					int * regress,
 					int * scale,
 					int * est,
 					int * error,
 					double * kl,
 					int * approx,
-					int * total_replicates,
-					double * X,
-					double * y,
-					double * var_y,
-					int * n,
-					int * m,
-					int * ordering_mat,
+					int * totalModelFits,
+					double * penalizedDataMatrix,
+					double * responseVariable,
+					double * responseVariance,
+					int * numberSamples,
+					int * numberPenalizedFeatures,
+					int * realizationMatrix,
 					struct gaussianModelRealization * model){
 
-	//initialize: (*model).control_param;
-
-	//Rprintf("epsilon: %g\n",epsilon[0]);
-	//Rprintf("l0_path[0]: %g\n",l0_path[0]);
-	//Rprintf("pb_path[0]: %g\n",pb_path[0]);
-	//Rprintf("exclude[1]: %d\n",exclude[1]);
-	//Rprintf("pf[0]: %g\n",penalty_factor[0]);
-	//Rprintf("maxit: %d\n",maxit[0]);
-	//Rprintf("path_length: %d\n",path_length[0]);
-	//Rprintf("n_orderings: %d\n",n_orderings[0]);
-	//Rprintf("regress: %d\n",regress[0]);
-	//Rprintf("scale: %d\n",scale[0]);
-	//Rprintf("est: %d\n",est[0]);
-	//Rprintf("error: %d\n",error[0]);
-	//Rprintf("kl: %g\n",kl[0]);
-	//Rprintf("tr: %d\n",total_replicates[0]);
-	//Rprintf("X[0,0]: %g\n",X[0]);
-	//Rprintf("y[0]: %g\n",y[0]);
-	//Rprintf("var_y: %g\n",var_y[0]);
-	//Rprintf("n: %d\n",n[0]);
-	//Rprintf("m: %d\n",m[0]);
-	//Rprintf("ordering_mat[0]: %d\n",ordering_mat[0]);
-
 	int k,l;
-	model->control_param.epsilon = (*epsilon);
-	//model->control_param.max_pb = (*max_pb);
-	model->control_param.l0_path = (double *) malloc(sizeof(double)*(*path_length));
-	model->control_param.pb_path = (double *) malloc(sizeof(double)*(*path_length));
-	for(k=0;k<*path_length;k++){
-		model->control_param.l0_path[k]=l0_path[k];
-		model->control_param.pb_path[k]=pb_path[k];
+
+	//k, l: iterators
+	model->modelState.epsilon = (*epsilon);
+
+	model->modelState.l0Vector = (double *) malloc(sizeof(double)*(*l0VectorLength));
+	model->modelState.priorProbabilityVector = (double *) malloc(sizeof(double)*(*l0VectorLength));
+	for(k=0;k<*l0VectorLength;k++){
+		model->modelState.l0Vector[k]=l0Vector[k];
+		model->modelState.priorProbabilityVector[k]=priorProbabilityVector[k];
 	}
 
-	model->control_param.exclude = (int *) malloc(sizeof(int)*(*numberPenalizedFeatures));
-	model->control_param.penalty_factor = (double *) malloc(sizeof(double)*(*numberPenalizedFeatures));
-	for(k=0;k<*m;k++){
-		model->control_param.exclude[k]=exclude[k];
-		model->control_param.penalty_factor[k]=penalty_factor[k];
+	model->modelState.penalizeVariable = (int *) malloc(sizeof(int)*(*numberPenalizedFeatures));
+	model->modelState.featureColumnScalingFactor = (double *) malloc(sizeof(double)*(*numberPenalizedFeatures));
+	for(k=0;k<*numberPenalizedFeatures;k++){
+		model->modelState.penalizeVariable[k]=penalizeVariable[k];
+		model->modelState.featureColumnScalingFactor[k]=featureColumnScalingFactor[k];
 	}
 
-	model->control_param.maxit = (*maxit);
-	model->control_param.path_length = (*path_length);
-	model->control_param.n_orderings = (*n_orderings);
+	model->modelState.maximumIterations = (*maximumIterations);
+	model->modelState.l0VectorLength = (*l0VectorLength);
+	model->modelState.numberOfRealizations = (*numberOfRealizations);
 	if((*regress)==1){
-		model->control_param.regressType = LINEAR;
+		model->modelState.regressType = LINEAR;
 	} else{
-		model->control_param.regressType = LOGISTIC;
+		model->modelState.regressType = LOGISTIC;
 	}
 
 	if((*scale)==1){
-		model->control_param.scaleType = SCALE;
+		model->modelState.scaleType = SCALE;
 	} else{
-		model->control_param.scaleType = NOSCALE;
+		model->modelState.scaleType = NOSCALE;
 	}
 
 	if((*est)==1){
-		model->control_param.estType = BMA;
+		model->modelState.estType = BMA;
 	} else{
-		model->control_param.estType = MAXIMAL;
+		model->modelState.estType = MAXIMAL;
 	}
 
 	if((*error)==1){
-		model->control_param.errType = KL;
+		model->modelState.errType = KL;
 	} else{
-		model->control_param.errType = NOKL;
+		model->modelState.errType = NOKL;
 	}
 
 	if((*approx)==1){
-		model->control_param.bType = APPR;
+		model->modelState.bType = APPR;
 	} else{
-		model->control_param.errType = EXACT;
+		model->modelState.errType = EXACT;
 	}
 
 
-	model->control_param.kl_percentile = (*kl);
-	model->control_param.total_replicates = (*total_replicates);
+	model->modelState.kl_percentile = (*kl);
+	model->modelState.totalModelFits = (*totalModelFits);
 	//initialize: (*model).(data);
 	//struct single_mod *single_mods;
 	//single_mods= (single_mod *) malloc(sizeof(single_mod)*(n_order+1));
 
-	model->data.X = (struct matrix_v *) malloc(sizeof(struct matrix_v)*(*numberPenalizedFeatures));
+	model->data.penalizedDataMatrix = (struct doubleColumnVector *) malloc(sizeof(struct doubleColumnVector)*(*numberPenalizedFeatures));
 	for(k=0;k<(*numberPenalizedFeatures);k++){
-		(&(model->data.X[k]))->col = (double *) malloc(sizeof(double)*(*n));
+		(&(model->data.penalizedDataMatrix[k]))->column = (double *) malloc(sizeof(double)*(*n));
 	}
 
 	for(k=0;k<(*numberPenalizedFeatures);k++){
 		for(l=0;l<(*n);l++){
-			(&(model->data.X[k]))->col[l] = X[k*(*n)+l];
+			(&(model->data.penalizedDataMatrix[k]))->column[l] = penalizedDataMatrix[k*(*n)+l];
 		}
 	}
 
-	model->data.y = y;
-	model->data.var_y = (*var_y);
-	model->data.n = (*n);
-	model->data.m = (*numberPenalizedFeatures);
+	model->data.responseVariable = responseVariable;
+	model->data.responseVariance = (*responseVariance);
+	model->data.numberSamples = (*numberSamples);
+	model->data.numberPenalizedFeatures = (*numberPenalizedFeatures);
 	int (pii) =0;
 	for(k=0;k<(*numberPenalizedFeatures);k++){
-		//Rprintf("exclude[%d]:%d\n",k,exclude[k]);
-		if(exclude[k]==1){
+		//Rprintf("penalizeVariable[%d]:%d\n",k,penalizeVariable[k]);
+		if(penalizeVariable[k]==1){
 			//Rprintf("worked\n");
 			++(pii);
 		}
 	}
-	model->data.p = (pii);
+	model->data.numberUnpenalizedFeatures = (pii);
 	//Rprintf("model->data.p = %d\n",model->data.p);
-	model->data.x_sum_sq = (double *) malloc(sizeof(double)*(*numberPenalizedFeatures));
+	model->data.penalizedDataMatrixColumnSumOfSquares = (double *) malloc(sizeof(double)*(*numberPenalizedFeatures));
 
 
-	model->data.ordering = (struct matrix_i *) malloc(sizeof(struct matrix_i)*(*n_orderings));
-	for(k=0;k<(*n_orderings);k++){
-		(&(model->data.ordering[k]))->col = (int *) malloc(sizeof(int)*(*numberPenalizedFeatures));
+	model->data.realizationMatrix = (struct integerColumnVector *) malloc(sizeof(struct integerColumnVector)*(*numberOfRealizations));
+	for(k=0;k<(*numberOfRealizations);k++){
+		(&(model->data.realizationMatrix[k]))->column = (int *) malloc(sizeof(int)*(*numberPenalizedFeatures));
 	}
 
-	for(k=0;k<(*n_orderings);k++){
+	for(k=0;k<(*numberOfRealizations);k++){
 		for(l=0;l<(*numberPenalizedFeatures);l++){
-			(&(model->data.ordering[k]))->col[l] = ordering_mat[k*(*numberPenalizedFeatures)+l];
+			(&(model->data.realizationMatrix[k]))->column[l] = realizationMatrix[k*(*numberPenalizedFeatures)+l];
 		}
 	}
 
-	model->data.onesVector = (double *) malloc(sizeof(double)*(*n));
-	for(k=0;k<(*n);k++){
+	model->data.onesVector = (double *) malloc(sizeof(double)*(*numberSamples));
+	for(k=0;k<(*numberSamples);k++){
 		model->data.onesVector[k]= 1.0;
 	}
 
 
-	process_data(model);
+	dataStandardization(model);
 
 	//initialize: (*model).getModelParameterRealization(model,realizationIndex,penaltyIndex);
 
-	model->order = (struct order_struct *) malloc(sizeof(struct order_struct)*(*n_orderings));
-	for(k=0;k<(*n_orderings);k++){
-		(&(model->order[k]))->model_param = (struct model_param_struct *) malloc(sizeof(struct model_param_struct)*(*path_length));
+	model->modelParameterRealization = (struct modelParameters *) malloc(sizeof(struct modelParameters)*(*numberOfRealizations));
+	for(k=0;k<(*numberOfRealizations);k++){
+		(&(model->modelParameterRealization[k]))->model_param = (struct model_param_struct *) malloc(sizeof(struct model_param_struct)*(*l0VectorLength));
 	}
 
-	for(k=0;k<(*n_orderings);k++){
-		for(l=0;l<(*path_length);l++){
-			initialize_model_param((*n),(*numberPenalizedFeatures),k,l,model,y,*var_y);
+	for(k=0;k<(*numberOfRealizations);k++){
+		for(l=0;l<(*l0VectorLength);l++){
+			initialize_model_param((*numberSamples),(*numberPenalizedFeatures),k,l,model,responseVariable,*responseVariance);
 		}
 	}
-
-
 }
 
 
 
 
-void free_model(struct gaussianModelRealization * model){
-	//free X
+void freeGaussianModel(struct gaussianModelRealization * model){
+	//free penalizedDataMatrix
+	//i,j,k -> iteraktors
 	int i,j,k;
 	for(k=0;k<(model->data.m);k++){
-		free((&(model->data.X[k]))->col);
+		free((&(model->data.penalizedDataMatrix[k]))->column);
 
 	}
-	free(model->data.X);
-	//free orderings
+	free(model->data.penalizedDataMatrix);
+	//free realizationMatrixs
 
-	for(k=0;k<(model->control_param.n_orderings);k++){
-		free((&(model->data.ordering[k]))->col);
+	for(k=0;k<(model->modelState.numberOfRealizations);k++){
+		free((&(model->data.realizationMatrix[k]))->column);
 	}
-	free(model->data.ordering);
+	free(model->data.realizationMatrix);
 
-	//free order:model_param
-	for(i=0;i<model->control_param.n_orderings;i++){
-		for(j=0;j<model->control_param.path_length;j++){
-			free_model_param(model, i, j);
+	//free modelParameterRealization:model_param
+	for(i=0;i<model->modelState.numberOfRealizations;i++){
+		for(j=0;j<model->modelState.l0VectorLength;j++){
+			freeGaussianModelParameters(model, i, j);
 		}
 	}
 
 
-	for(k=0;k<(model->control_param.n_orderings);k++){
-		free((&(model->order[k]))->model_param);
+	for(k=0;k<(model->modelState.numberOfRealizations);k++){
+		free((&(model->modelParameterRealization[k]))->model_param);
 	}
-	free(model->order);
+	free(model->modelParameterRealization);
 
-	//free x_sum_sq
+	//free penalizedDataMatrixColumnSumOfSquares
 
-	free(model->data.x_sum_sq);
+	free(model->data.penalizedDataMatrixColumnSumOfSquares);
 
 	//free onesVector
 
 	free(model->data.onesVector);
 
-	free(model->control_param.l0_path);
-	free(model->control_param.pb_path);
-	free(model->control_param.penalty_factor);
-	free(model->control_param.exclude);
+	free(model->modelState.l0Vector);
+	free(model->modelState.priorProbabilityVector);
+	free(model->modelState.featureColumnScalingFactor);
+	free(model->modelState.penalizeVariable);
 
 
 }
@@ -391,33 +369,33 @@ void update_beta(struct gaussianModelRealization * model, int i, int j){
 	double mu, sigma,prec, chi, p, e_b,e_b2,l0;
 
 
-	//if(model->control_param.max_pb==1){
+	//if(model->modelState.max_pb==1){
 	//	l0 = getModelParameterRealization(model,i,j)->l0_max;
 	//}else{
-		l0 = model->control_param.l0_path[j];
+		l0 = model->modelState.l0Vector[j];
 	//}
 	//Rprintf("l0: %g\n",l0);
 	//Rprintf("m: %d\n",model->data.m);
 	//error("!!!\n");
-	switch (model->control_param.regressType){
+	switch (model->modelState.regressType){
 
 
 		case LINEAR:
 			//run linear updates
 			for(l=0;l< model->data.m ;l++){
-				k = (&(model->data.ordering[i]))->col[l];
+				k = (&(model->data.realizationMatrix[i]))->column[l];
 				//k = l;
 				//Rprintf("k: %d\n",k);
-				exc = model->control_param.exclude[k];
+				exc = model->modelState.penalizeVariable[k];
 				//Rprintf("exc: %d\n",exc);
 				innerProduct(model->data.n,xc(model,k),getModelParameterRealization(model,realizationIndex,penaltyIndex)->residualVector,&mu);
 				//Rprintf("mu: %g\n",mu);
-				//Rprintf("xumsq: %g, k: %d\n",model->data.x_sum_sq[k],k);
-				mu = mu + (model->data.x_sum_sq[k])*(getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
+				//Rprintf("xumsq: %g, k: %d\n",model->data.penalizedDataMatrixColumnSumOfSquares[k],k);
+				mu = mu + (model->data.penalizedDataMatrixColumnSumOfSquares[k])*(getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
 				//Rprintf("mu: %g\n",mu);
-				mu = mu/model->data.x_sum_sq[k];
+				mu = mu/model->data.penalizedDataMatrixColumnSumOfSquares[k];
 				//Rprintf("mu: %g\n",mu);
-				sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError)*(model->data.x_sum_sq[k]));
+				sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError)*(model->data.penalizedDataMatrixColumnSumOfSquares[k]));
 				//Rprintf("sigma: %g\n",sigma);
 				chi = pow(mu,2)/sigma;
 				//Rprintf("chi: %g, expectationBeta[%d]: %g\n",chi,k,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
@@ -435,7 +413,7 @@ void update_beta(struct gaussianModelRealization * model, int i, int j){
 
 
 				if(exc==0){
-				  getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
+				  getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection + (pow(e_b,2)-e_b2)*(model->data.penalizedDataMatrixColumnSumOfSquares[k]);
 				  getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities = getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities + p;
 				  if(p>1-1e-10){
 				    getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy - p*log(p) + (1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
@@ -459,17 +437,17 @@ void update_beta(struct gaussianModelRealization * model, int i, int j){
 		case LOGISTIC:
 			//run logistic updates
 			for(l=0;l< model->data.m ;l++){
-				k = (&(model->data.ordering[i]))->col[l];
+				k = (&(model->data.realizationMatrix[i]))->column[l];
 				for(t=0; t< model->data.n;t++){
 					getModelParameterRealization(realizationIndex,penaltyIndex)->x_w[t] = ((xc(model,k))[t])*(getModelParameterRealization(realizationIndex,penaltyIndex)->w_vec[t]);
 				}
 
 				//k = l;
 				//Rprintf("k: %d\n",k);
-				exc = model->control_param.exclude[k];
+				exc = model->modelState.penalizeVariable[k];
 				//exc = 1;
 				//Rprintf("exc: %d\n",exc);
-				//sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError)*(model->data.x_sum_sq[k]));
+				//sigma = 1/((1/getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError)*(model->data.penalizedDataMatrixColumnSumOfSquares[k]));
 				innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->x_w,xc(model,k),&prec);
 				sigma = 1/prec;
 				//Rprintf("sigma: %g\n",sigma);
@@ -502,7 +480,7 @@ void update_beta(struct gaussianModelRealization * model, int i, int j){
 				} else {
 					getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy = getModelParameterRealization(realizationIndex,penaltyIndex)->posteriorProbabilityEntropy - p*log(p) - (1-p)*log(1-p) + 0.5*p*log(2*exp(1)*M_PI*sigma);
 				}
-				//getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection + (pow(e_b,2)-e_b2)*(model->data.x_sum_sq[k]);
+				//getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection + (pow(e_b,2)-e_b2)*(model->data.penalizedDataMatrixColumnSumOfSquares[k]);
 
 				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]-e_b);
 				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new,e_b - getModelParameterRealization(realizationIndex,penaltyIndex)->expectationBeta[k]);
@@ -528,7 +506,7 @@ void update_error(struct gaussianModelRealization * model, int i, int j){
 	double U;
 	double nd = (double) model->data.n;
 
-	switch(model->control_param.regressType){
+	switch(model->modelState.regressType){
 
 		case LINEAR:
 
@@ -544,7 +522,7 @@ void update_error(struct gaussianModelRealization * model, int i, int j){
       //getModelParameterRealization(realizationIndex,penaltyIndex)->sigmaSquaredError = 1.0;
                         //Rprintf("no segfault\n");
 			if(!R_FINITE(U)){
-				free_model(model);
+				freeGaussianModel(model);
 				//Rprintf("segfault\n");
 				error("Penalized linear solution does not exist.\n");
 				//error("uh oh\n");
@@ -562,7 +540,7 @@ void update_error(struct gaussianModelRealization * model, int i, int j){
 				getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_old[t] = getModelParameterRealization(realizationIndex,penaltyIndex)->pred_vec_new[t];
 				if(getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t]==1 || getModelParameterRealization(realizationIndex,penaltyIndex)->mu_vec[t] ==0){
 					//Rprintf("OVERFIT\n");
-					free_model(model);
+					freeGaussianModel(model);
 					error("Penalized logistic solution does not exist.\n");
 				}
 
@@ -597,15 +575,15 @@ void update_lowerBound(struct gaussianModelRealization * model, int i, int j){
 	double pd = (double) model->data.p;
 	md = md - pd;
 	double p_beta;
-	//if(model->control_param.max_pb==1){
+	//if(model->modelState.max_pb==1){
 	//	p_beta = getModelParameterRealization(realizationIndex,penaltyIndex)->p_max;
 	//}else{
-		p_beta = model->control_param.pb_path[j];
+		p_beta = model->modelState.priorProbabilityVector[j];
 	//}
 	int t;
   double U;
 
-	switch(model->control_param.regressType){
+	switch(model->modelState.regressType){
 
 		case LINEAR:
       innerProduct(model->data.n,getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,getModelParameterRealization(realizationIndex,penaltyIndex)->residualVector,&U);
@@ -651,14 +629,14 @@ void run_vbsr(struct gaussianModelRealization * model){
 	double lowerBound_old;
 	int count = 0;
 	//#pragma omp parallel for private(i,j,count,tol,lb_old)
-	for (i=0;i < model->control_param.n_orderings;i++){
-		for(j=0;j < model->control_param.path_length;j++){
+	for (i=0;i < model->modelState.numberOfRealizations;i++){
+		for(j=0;j < model->modelState.l0VectorLength;j++){
 			if(j>0){
 				//copy the previous path to the new path
 				copy_model_state(model,i,j);
 				//Rprintf("Copied model state...\n");
 			}
-			while(fabs(tol) > model->control_param.epsilon && count < model->control_param.maxit){
+			while(fabs(tol) > model->modelState.epsilon && count < model->modelState.maximumIterations){
 
 				getModelParameterRealization(realizationIndex,penaltyIndex)->sumOfBetaPosteriorProbabilities = 0;
 				getModelParameterRealization(realizationIndex,penaltyIndex)->betaSquaredExpectationCorrection = 0;
@@ -667,7 +645,7 @@ void run_vbsr(struct gaussianModelRealization * model){
 				//Rprintf("Updating beta...\n");
 				update_beta(model,i,j);
 
-				//if(model->control_param.max_pb==1){
+				//if(model->modelState.max_pb==1){
 				//	update_p_beta(model,i,j);
 				//}
 				//Rprintf("Updating error...\n");
@@ -680,7 +658,7 @@ void run_vbsr(struct gaussianModelRealization * model){
 
 			}
 			//Rprintf("lowerBound: %g,i: %d, j: %d\n",lb_old,i,j);
-			if(count>=model->control_param.maxit){
+			if(count>=model->modelState.maximumIterations){
 				Rprintf("Maximum iterations exceeded!\n");
 			}
 			count =0;
@@ -728,15 +706,15 @@ void compute_bma_correct(struct gaussianModelRealization * model,int k,double * 
 	//l ord ind
 	//k marker ind
 	//j path ind
-	for (t=0;t<model->control_param.n_orderings;t++){
+	for (t=0;t<model->modelState.numberOfRealizations;t++){
 		if(post_prob[t] > 0){
 			s_bma[0] = s_bma[0] + pow(post_prob[t],2);
 		}
 	}
 
 
-	for(t=0;t<model->control_param.n_orderings-1;t++){
-		for(l=t+1;l<model->control_param.n_orderings;l++){
+	for(t=0;t<model->modelState.numberOfRealizations-1;t++){
+		for(l=t+1;l<model->modelState.numberOfRealizations;l++){
 			if(post_prob[t]>0 && post_prob[l]>0){
 				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,t,j)->residualVector,getModelParameterRealization(model,t,j)->expectationBeta[k]);
 				scaledVectorAddition(model->data.n,xc(model,k),getModelParameterRealization(model,l,j)->residualVector,getModelParameterRealization(model,l,j)->expectationBeta[k]);
@@ -767,44 +745,44 @@ void collapse_results(struct gaussianModelRealization * model,
 
 	int i,j,k;
 	double max_v,bc,bm,bs,eb,bp,Z,s_bma;
-	double * post_prob = (double *) malloc(sizeof(double)*model->control_param.n_orderings);
-	double * lb_t = (double *) malloc(sizeof(double)*model->control_param.n_orderings);
+	double * post_prob = (double *) malloc(sizeof(double)*model->modelState.numberOfRealizations);
+	double * lb_t = (double *) malloc(sizeof(double)*model->modelState.numberOfRealizations);
 	//max_v = -1e100;
 	int w_max;
-	//if(model->control_param.max_pb==1){
-	//	for(i=0;i<model->control_param.n_orderings;i++){
+	//if(model->modelState.max_pb==1){
+	//	for(i=0;i<model->modelState.numberOfRealizations;i++){
 	//		p_est[i]=getModelParameterRealization(model,i,0)->p_max;
 	//	}
 	//}
 
-	switch(model->control_param.estType){
+	switch(model->modelState.estType){
 
 
 		case BMA:
-			for(j=0;j<model->control_param.path_length;j++){
+			for(j=0;j<model->modelState.l0VectorLength;j++){
 				max_v = getModelParameterRealization(model,0,j)->lowerBound;
 				w_max = 0;
 				Z =0;
-				for(i=0;i<model->control_param.n_orderings;i++){
+				for(i=0;i<model->modelState.numberOfRealizations;i++){
 					if(getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound > max_v){
 						max_v = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 						w_max = i;
 					}
-					lb_mat[(model->control_param.n_orderings)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
+					lb_mat[(model->modelState.numberOfRealizations)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 					lb_t[i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 				}
-				for(i=0;i<model->control_param.n_orderings;i++){
+				for(i=0;i<model->modelState.numberOfRealizations;i++){
 					Z = Z + exp(getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound-max_v);
 				}
-				for(i=0;i<model->control_param.n_orderings;i++){
+				for(i=0;i<model->modelState.numberOfRealizations;i++){
 					post_prob[i] = exp(getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound-max_v)/Z;
 					//Rprintf("post_prob[%d]: %g\t",i,post_prob[i]);
-					//lb_mat[(model->control_param.n_orderings)*(j)+i] = post_prob[i];
+					//lb_mat[(model->modelState.numberOfRealizations)*(j)+i] = post_prob[i];
 					//bm = bm + post_prob*getModelParameterRealization(realizationIndex,penaltyIndex)->betaChi
 				}
 				//Rprintf("\n");
 
-				identify_unique(lb_t,post_prob,model->control_param.n_orderings,model->control_param.epsilon*10);
+				identify_unique(lb_t,post_prob,model->modelState.numberOfRealizations,model->modelState.epsilon*10);
 
 				for(k=0;k<model->data.m;k++){
 					bc =0;
@@ -812,7 +790,7 @@ void collapse_results(struct gaussianModelRealization * model,
 					bs=0;
 					eb=0;
 					bp=0;
-					switch(model->control_param.errType){
+					switch(model->modelState.errType){
 					case APPR:
 						s_bma = 1;
 						break;
@@ -824,7 +802,7 @@ void collapse_results(struct gaussianModelRealization * model,
 						break;
 					}
 
-					for(i=0;i<model->control_param.n_orderings;i++){
+					for(i=0;i<model->modelState.numberOfRealizations;i++){
 						bc = bc+ post_prob[i]*getModelParameterRealization(realizationIndex,penaltyIndex)->betaChi[k];
 						bm = bm+ post_prob[i]*getModelParameterRealization(realizationIndex,penaltyIndex)->betaMu[k];
 						bs = bs+ post_prob[i]*getModelParameterRealization(realizationIndex,penaltyIndex)->betaSigmaSquared[k];
@@ -843,15 +821,15 @@ void collapse_results(struct gaussianModelRealization * model,
 
 		case MAXIMAL:
 			////
-			for(j=0;j<model->control_param.path_length;j++){
+			for(j=0;j<model->modelState.l0VectorLength;j++){
 				max_v = getModelParameterRealization(model,0,j)->lowerBound;
 				w_max = 0;
-				for(i=0;i<model->control_param.n_orderings;i++){
+				for(i=0;i<model->modelState.numberOfRealizations;i++){
 					if(getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound > max_v){
 						max_v = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 						w_max = i;
 					}
-					lb_mat[(model->control_param.n_orderings)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
+					lb_mat[(model->modelState.numberOfRealizations)*(j)+i] = getModelParameterRealization(realizationIndex,penaltyIndex)->lowerBound;
 				}
 				for(k=0;k<model->data.m;k++){
 					beta_chi_mat[(model->data.m)*(j)+k] = getModelParameterRealization(model,w_max,j)->betaChi[k];
@@ -875,26 +853,25 @@ void collapse_results(struct gaussianModelRealization * model,
 }
 
 void run_vbsr_wrapper(double * epsilon,
-			double * l0_path,
-			double * pb_path,
-			int * exclude,
-			double * penalty_factor,
-			int * maxit,
-			int * path_length,
-			int * n_orderings,
+			double * l0Vector,
+			double * priorProbabilityVector,
+			double * featureColumnScalingFactor,
+			int * maximumIterations,
+			int * l0VectorLength,
+			int * numberOfRealizations,
 			int * regress,
 			int * scale,
 			int * est,
 			int * error,
 			double * kl,
 			int * approx,
-			int * total_replicates,
-			double * X,
-			double * y,
-			double * var_y,
+			int * totalModelFits,
+			double * penalizedDataMatrix,
+			double * responseVariable,
+			double * responseVariance,
 			int * n,
 			int * m,
-			int * ordering_mat,
+			int * realizationMatrix,
 			double * beta_chi_mat,
 			double * beta_mu_mat,
 			double * beta_sigma_mat,
@@ -909,12 +886,12 @@ void run_vbsr_wrapper(double * epsilon,
 	//omp_set_num_threads(*nthreads);
 	//Rprintf("nthreads: %d, nthreads_o: %d\n",*nthreads,omp_get_max_threads());
 	//Rprintf("Initializing model...\n");
-	initialize_model(epsilon,l0_path,pb_path,exclude,penalty_factor,maxit,path_length,n_orderings,regress,scale,est,error,kl,approx,total_replicates,X, y, var_y, n, m,ordering_mat,&model);
+	initialize_model(epsilon,l0Vector,priorProbabilityVector,penalizeVariable,featureColumnScalingFactor,maximumIterations,l0VectorLength,numberOfRealizations,regress,scale,est,error,kl,approx,totalModelFits,penalizedDataMatrix, responseVariable, responseVariance, n, m,realizationMatrix,&model);
 	//Rprintf("Initialized model...\n");
 	run_vbsr(&model);
 	//Rprintf("Model run...\n");
 	collapse_results(&model,beta_chi_mat, beta_mu_mat, beta_sigma_mat, e_beta_mat, beta_p_mat, lb_mat, kl_mat);
 	//Rprintf("Results computed..\n");
-	free_model(&model);
+	freeGaussianModel(&model);
 
 }
