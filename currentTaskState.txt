@@ -111,3 +111,6 @@ code clean up
 
 Feburary 3, 2016
 code clean up - replace variable names rethink functions.
+
+February 15, 2016
+code clean up
