@@ -256,7 +256,7 @@ double * extractPenalizedFeatureMatrixColumn(struct gaussianModelRealization * m
 
 int * extractRealizationMatrixColumn(struct gaussianModelRealization * model, int columnIndex);
 
-struct gaussianModelRealization * getModelParameterRealization(struct gaussianModelRealization * model,int realizationIndex, int penaltyIndex);
+struct gaussianModelRealization * getParameters(struct gaussianModelRealization * model,int realizationIndex, int penaltyIndex);
 
 void initializeGaussianModelParameters(int numberSamples,
 				int numberPenalizedFeatures,
