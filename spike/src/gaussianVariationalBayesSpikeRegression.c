@@ -146,11 +146,8 @@ void initializeGaussianModel(double * epsilon,
 					int * maximumIterations,
 					int * l0VectorLength,
 					int * numberOfRealizations,
-					int * regress,
 					int * scale,
 					int * est,
-					int * error,
-					double * kl,
 					int * approx,
 					int * totalModelFits,
 					double * penalizedDataMatrix,
@@ -183,11 +180,6 @@ void initializeGaussianModel(double * epsilon,
 	model->modelState.maximumIterations = (*maximumIterations);
 	model->modelState.l0VectorLength = (*l0VectorLength);
 	model->modelState.numberOfRealizations = (*numberOfRealizations);
-	if((*regress)==1){
-		model->modelState.regressType = LINEAR;
-	} else{
-		model->modelState.regressType = LOGISTIC;
-	}
 
 	if((*scale)==1){
 		model->modelState.scaleType = SCALE;
@@ -201,20 +193,12 @@ void initializeGaussianModel(double * epsilon,
 		model->modelState.estType = MAXIMAL;
 	}
 
-	if((*error)==1){
-		model->modelState.errType = KL;
-	} else{
-		model->modelState.errType = NOKL;
-	}
-
 	if((*approx)==1){
 		model->modelState.bType = APPR;
 	} else{
 		model->modelState.errType = EXACT;
 	}
 
-
-	model->modelState.kl_percentile = (*kl);
 	model->modelState.totalModelFits = (*totalModelFits);
 	//initialize: (*model).(data);
 	//struct single_mod *single_mods;
@@ -564,8 +548,7 @@ void collapse_results(struct gaussianModelRealization * model,
 						double * beta_sigma_mat,
 						double * e_beta_mat,
 						double * beta_p_mat,
-						double * lb_mat,
-						double * kl_mat){
+						double * lb_mat){
 
 	int i,j,k;
 	double max_v,bc,bm,bs,eb,bp,Z,s_bma;
@@ -683,11 +666,8 @@ void runGaussianVariationalBayesSpikeRegression(double * epsilon,
 			int * maximumIterations,
 			int * l0VectorLength,
 			int * numberOfRealizations,
-			int * regress,
 			int * scale,
 			int * est,
-			int * error,
-			double * kl,
 			int * approx,
 			int * totalModelFits,
 			double * penalizedDataMatrix,
@@ -702,7 +682,6 @@ void runGaussianVariationalBayesSpikeRegression(double * epsilon,
 			double * e_beta_mat,
 			double * beta_p_mat,
 			double * lb_mat,
-			double * kl_mat,
 			int * nthreads){
 
 
@@ -710,11 +689,11 @@ void runGaussianVariationalBayesSpikeRegression(double * epsilon,
 	//omp_set_num_threads(*nthreads);
 	//Rprintf("nthreads: %d, nthreads_o: %d\n",*nthreads,omp_get_max_threads());
 	//Rprintf("Initializing model...\n");
-	initialize_model(epsilon,l0Vector,priorProbabilityVector,penalizeVariable,featureColumnScalingFactor,maximumIterations,l0VectorLength,numberOfRealizations,regress,scale,est,error,kl,approx,totalModelFits,penalizedDataMatrix, responseVariable, responseVariance, n, m,realizationMatrix,&model);
+	initialize_model(epsilon,l0Vector,priorProbabilityVector,penalizeVariable,featureColumnScalingFactor,maximumIterations,l0VectorLength,numberOfRealizations,scale,est,approx,totalModelFits,penalizedDataMatrix, responseVariable, responseVariance, n, m,realizationMatrix,&model);
 	//Rprintf("Initialized model...\n");
 	runGaussianVariationalBayesSpikeRegression(&model);
 	//Rprintf("Model run...\n");
-	collapse_results(&model,beta_chi_mat, beta_mu_mat, beta_sigma_mat, e_beta_mat, beta_p_mat, lb_mat, kl_mat);
+	collapse_results(&model,beta_chi_mat, beta_mu_mat, beta_sigma_mat, e_beta_mat, beta_p_mat, lb_mat);
 	//Rprintf("Results computed..\n");
 	freeGaussianModel(&model);
 
