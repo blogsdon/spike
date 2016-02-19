@@ -7,9 +7,6 @@
 #include <stdio.h>
 #include <R_ext/BLAS.h>
 
-//generalizedLinearModelType: the type of genearlized linear model to fit
-typedef enum {NORMAL, BINOMIAL} generalizedLinearModelType;
-
 //modelSpaceSelection: whether to do Bayesian model averaging or
 //		  take the mode with maxmimum lower bound
 typedef enum {BMA, MAXIMAL, FULL} modelSpaceSelectionType;
@@ -67,10 +64,6 @@ struct controlParameterSettings {
 	//numberOfRealizations: number of restarts of algorithm
 	//	       default: 100
 	const int numberOfRealizations;
-
-	//regressType: the type of regression used
-	//	       default: LINEAR
-	generalizedLinearModelType generalizedLinearModelUsed;
 
 	//scaleFeatureMatrix: whether or not to scale the columns
 	//	     default: SCALE
@@ -186,7 +179,7 @@ struct dataRealization {
 	//y: the vector containing the phenotype data
 	const double * responseVariable;
 
-	//var_y: the variance of the phenotype
+	//responseVariance: the variance of the phenotype
 	const double responseVariance;
 
 	//n: the number of samples
@@ -285,7 +278,7 @@ void initializeGaussianModel(double * eps,
 			double * responseVariance,
 			int * numberSamples,
 			int * numberPenalizedFeatures,
-			int * ordering_mat,
+			int * realizationMatrix,
 			struct gaussianModelRealization * model);
 
 void freeGaussianModel(struct gaussianModelRealization * model);
@@ -307,12 +300,13 @@ void runGaussianVariationalBayesSpikeRegression(struct gaussianModelRealization 
 void computeBayesianModelAveragingCovarianceCorrection(struct gaussianModelRealization * model,int k,double * post_prob,double * s_bma,int j);
 
 void extractGaussianResults(struct gaussianModelRealization * model,
-			double * beta_chi_mat,
-			double * beta_mu_mat,
-			double * beta_sigma_mat,
-			double * e_beta_mat,
-			double * beta_p_mat,
-			double * lb_mat);
+														double * betaMuResult,
+														double * betaSigmaSquaredResult,
+														double * expectationBetaResult,
+														double * posteriorProbabilityBetaResult,
+														double * lowerBoundResult,
+														double * sigmaSquaredErrorResult,
+														double * alphaResult);
 
 void gaussianVariationalBayesSpikeRegression(double * eps,
 			double * l0Vector,
@@ -326,16 +320,17 @@ void gaussianVariationalBayesSpikeRegression(double * eps,
 			int * est,
 			int * approx,
 			int * totalModelFits,
-			double * X,
-			double * y,
-			double * var_y,
-			int * n,
-			int * m,
+			double * penalizedDataMatrix,
+			double * responseVariable,
+			double * responseVariance,
+			int * numberSamples,
+			int * numberPenalizedFeatures,
 			int * ordering_mat,
-			double * beta_chi_mat,
-			double * beta_mu_mat,
-			double * beta_sigma_mat,
-			double * e_beta_mat,
-			double * beta_p_mat,
-			double * lb_mat,
+			double * betaMuResult,
+			double * betaSigmaSquaredResult,
+			double * expectationBetaResult,
+			double * posteriorProbabilityBetaResult,
+			double * lowerBoundResult,
+			double * sigmaSquaredErrorResult,
+			double * alphaResult,
 			int * nthreads);

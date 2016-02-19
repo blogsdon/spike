@@ -77,7 +77,7 @@ vbsr = function(responseVariable,
 	#compute sma p-values if pre-screening:
 
 	#build the realizationMatrix
-	
+
 	result <- c()
 	while(length(result)==0){
 		try(result<-.C("gaussianVariationalBayesSpikeRegression",
