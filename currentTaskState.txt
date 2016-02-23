@@ -119,10 +119,11 @@ February 16, 2016
 Further code clean up.  Need to diagram all dependency structures between .h, .c, and .R files.  Also need to figure out how to pass strings from R to C, and deal with control parameters more elegantly.  Need to figure out how to compile multiple libraries and have them link on compilation.
 
 0) decide on results to return -done
-1) go through all functions and modernize style (explicit/camelCase)/add comments
+1) go through all functions and modernize style (explicit/camelCase)/add comments - work in progress
 1) strings from R to C (for complicated control parameters)
-2) necessary library, data structure, and function calls to do least squares operations.  Precompute xhat matrix?
-3) control parameters from
-4) rewrite identify unique models using hashing after applying an absolute value function
-5) rewrite collapse Results to reflect new model results
+2) necessary library, data structure, and function calls to do least squares operations.  Precompute xhat matrix? - it's all in the blas sub routines.
+2) add alpha update functions, parameters, structs, etc...
+4) rewrite identify unique models using hashing after applying an absolute value function - use openssl library implementation of md5 function
+5) rewrite collapse Results to reflect new model results (need to figure out how to handle the case of returning every model - BMA, Maximal, and Complete, which is the hardest one to figure out)
 6) audit each function (e.g. make sure all the inputs are correct between .c/.h/.R)
+7) remove BMA covariance correction (for now)

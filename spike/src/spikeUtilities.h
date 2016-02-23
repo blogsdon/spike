@@ -25,3 +25,5 @@ void correlation(double * vector1, double * vector2, double * onesVector,double 
 
 //compute_ssq -> vectorSumOfSquares
 double vectorSumOfSquares(double * vector,int n);
+
+//define all wrapper functions that will do other matrix/vector operations.
