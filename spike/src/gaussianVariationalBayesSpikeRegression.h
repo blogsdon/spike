@@ -174,7 +174,7 @@ struct dataRealization {
 	const struct doubleColumnVector * penalizedDataMatrix;
 
 	//add in unpenalized data matrix
-	const struct doubleColumnVector * unpenalizedDataMatrix;
+	const struct double ** unpenalizedDataMatrix;
 
 	//y: the vector containing the phenotype data
 	const double * responseVariable;
@@ -253,6 +253,7 @@ struct gaussianModelRealization * getParameters(struct gaussianModelRealization 
 
 void initializeGaussianModelParameters(int numberSamples,
 				int numberPenalizedFeatures,
+				int numberUnpenalizedFeatures,
 				int realizationIndex,
 				int penaltyIndex,
 				struct gaussianModelRealization * model,
@@ -274,10 +275,12 @@ void initializeGaussianModel(double * eps,
 			int * applyBmaCovarianceCorrection,
 			int * totalModelFits,
 			double * penalizedDataMatrix,
+			double * unpenalizedDataMatrix,
 			double * responseVariable,
 			double * responseVariance,
 			int * numberSamples,
 			int * numberPenalizedFeatures,
+			int * numberUnpenalizedFeatures,
 			int * realizationMatrix,
 			struct gaussianModelRealization * model);
 
@@ -321,10 +324,12 @@ void gaussianVariationalBayesSpikeRegression(double * eps,
 			int * approx,
 			int * totalModelFits,
 			double * penalizedDataMatrix,
+			double * unpenalizedDataMatrix,
 			double * responseVariable,
 			double * responseVariance,
 			int * numberSamples,
 			int * numberPenalizedFeatures,
+			int * numberUnpenalizedFeatures,
 			int * ordering_mat,
 			double * betaMuResult,
 			double * betaSigmaSquaredResult,
