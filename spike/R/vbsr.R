@@ -1,10 +1,3 @@
-#getting rid of marginal analysis
-#getting rid of kl statistics
-#getting rid of screening
-#add s3 methods to function
-#clean solution ->
-#fix scaling -> maybe in c
-
 vbsr = function(responseVariable,
 		penalizedDataMatrix,
 		unpenalizedDataMatrix=NULL,
@@ -74,13 +67,11 @@ vbsr = function(responseVariable,
 	lowerBoundResult = double(numberOfRealizations*l0VectorLength)
 	priorProbabilityVector = 1/(1+exp(-0.5*l0Vector))
 
-	#compute sma p-values if pre-screening:
-
 	#build the realizationMatrix
 
 	result <- c()
 	while(length(result)==0){
-		try(result<-.C("gaussianVariationalBayesSpikeRegression",
+		try(collectedResults<-.Call("gaussianVariationalBayesSpikeRegression",
 			as.double(epsilon),
 			as.double(l0Vector),
 			as.double(priorProbabilityVector),
