@@ -4,7 +4,6 @@
 
 #include <R.h>
 #include <Rmath.h>
-#include <stdio.h>
 #include <R_ext/BLAS.h>
 
 //modelSpaceSelection: whether to do Bayesian model averaging or

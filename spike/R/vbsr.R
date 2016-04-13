@@ -1,7 +1,7 @@
 vbsr = function(responseVariable,
 		penalizedDataMatrix,
 		unpenalizedDataMatrix=NULL,
-		ordering_mat=NULL,
+		realizationMatrix=NULL,
 		epsilon=1e-6,
 		maximumIterations = 1e4,
 		numberOfRealizations = 10,
@@ -15,11 +15,12 @@ vbsr = function(responseVariable,
 
 	numberSamples <- nrow(penalizedDataMatrix)
 	numberPenalizedFeatures <- ncol(penalizedDataMatrix)
-	numberUnpenalizedFeatures <- ncol(unpenalizedDataMatrix)
+
 	#add intercept parameter
 	if(is.null(unpenalizedDataMatrix)){
 		unpenalizedDataMatrix <- as.matrix(rep(1,numberSamples))
 	}
+	numberUnpenalizedFeatures <- ncol(unpenalizedDataMatrix)
 
 	if(!is.null(posteriorProbabilityBonferroniMapping)){
 		l0VectorLength=1
@@ -31,31 +32,30 @@ vbsr = function(responseVariable,
     }
 	}
 
-	if(scaling==TRUE){
-		scale <- 1
-	} else if (scaling==FALSE){
-		scale <- 0
-	} else {
-		stop("Improper design matrix scaling parameter provided.")
-	}
+	#if(scaling==TRUE){
+	#	scale <- 1
+	#} else if (scaling==FALSE){
+	#	scale <- 0
+	#} else {
+	#	stop("Improper design matrix scaling parameter provided.")
+	#}
+
+	#if(modelSpaceSelectionType=="BMA"){
+	#	est <- "
+	#} else if (modelSpaceSelectionType =="MAXIMAL"){
+	#	est <- 0
+	#} else {
+	#	stop("Improper global estimation type.  Must be either 'BMA' or 'MAXIMAL'.")
+	#}
 
 
-	if(modelSpaceSelectionType=="BMA"){
-		est <- 1
-	} else if (modelSpaceSelectionType =="MAXIMAL"){
-		est <- 0
-	} else {
-		stop("Improper global estimation type.  Must be either 'BMA' or 'MAXIMAL'.")
-	}
-
-
-	if(applyBmaCovarianceCorrection==TRUE){
-		approx <- 1
-	} else if (applyBmaCovarianceCorrection==FALSE){
-		approx <- 0
-	} else {
-		stop("Improper Bayesian model averaging z-score approximate estimation indicator.")
-	}
+	#if(applyBmaCovarianceCorrection==TRUE){
+	#	approx <- 1
+	#} else if (applyBmaCovarianceCorrection==FALSE){
+	#	approx <- 0
+	#} else {
+	#	stop("Improper Bayesian model averaging z-score approximate estimation indicator.")
+	#}
 
 	#define results
 	totalModelFits = l0VectorLength*numberOfRealizations
@@ -69,9 +69,9 @@ vbsr = function(responseVariable,
 
 	#build the realizationMatrix
 
-	result <- c()
+	collectedResults <- c()
 	while(length(result)==0){
-		try(collectedResults<-.Call("gaussianVariationalBayesSpikeRegression",
+		try(collectedResults<-.C("gaussianVariationalBayesSpikeRegression",
 			as.double(epsilon),
 			as.double(l0Vector),
 			as.double(priorProbabilityVector),
@@ -83,6 +83,9 @@ vbsr = function(responseVariable,
 			as.double(unpenalizedDataMatrix),
 			as.double(responseVariable),
 			as.double(responseVariance),
+			as.character(modelSpaceSelectionType),
+			as.integer(scaling),
+			as.integer(applyBmaCovarianceCorrection),
 			as.integer(numberSamples),
 			as.integer(numberUnpenalizedFeatures),
 			as.integer(numberPenalizedFeatures),
@@ -95,10 +98,7 @@ vbsr = function(responseVariable,
 			as.double(sigmaSquaredErrorResult),
 			as.double(alphaResult),
 			PACKAGE="spike"),silent=TRUE)
-		if(length(result)==0&&l0VectorLength>1){
-			#rm(result)
-			#gc()
-			#result <- c()
+		if(length(collectedResults)==0&&l0VectorLength>1){
 			l0VectorLength <- l0VectorLength-1
 			l0Vector <- l0Vector[-1]
 			priorProbabilityVector <- priorProbabilityVector[-1]
@@ -121,7 +121,7 @@ vbsr = function(responseVariable,
 # 	}else{
 # 		mult <- rep(1,m)
 # 	}
-	  mult <- rep(1,m)
+#	  mult <- rep(1,m)
 
     return(collectedResults)
 	}
