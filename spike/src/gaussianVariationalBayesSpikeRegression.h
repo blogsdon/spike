@@ -4,7 +4,6 @@
 
 #include <R.h>
 #include <Rmath.h>
-#include <stdio.h>
 #include <R_ext/BLAS.h>
 
 //modelSpaceSelection: whether to do Bayesian model averaging or
@@ -174,7 +173,7 @@ struct dataRealization {
 	const struct doubleColumnVector * penalizedDataMatrix;
 
 	//add in unpenalized data matrix
-	const struct doubleColumnVector * unpenalizedDataMatrix;
+	const struct double ** unpenalizedDataMatrix;
 
 	//y: the vector containing the phenotype data
 	const double * responseVariable;
@@ -253,6 +252,7 @@ struct gaussianModelRealization * getParameters(struct gaussianModelRealization 
 
 void initializeGaussianModelParameters(int numberSamples,
 				int numberPenalizedFeatures,
+				int numberUnpenalizedFeatures,
 				int realizationIndex,
 				int penaltyIndex,
 				struct gaussianModelRealization * model,
@@ -274,10 +274,12 @@ void initializeGaussianModel(double * eps,
 			int * applyBmaCovarianceCorrection,
 			int * totalModelFits,
 			double * penalizedDataMatrix,
+			double * unpenalizedDataMatrix,
 			double * responseVariable,
 			double * responseVariance,
 			int * numberSamples,
 			int * numberPenalizedFeatures,
+			int * numberUnpenalizedFeatures,
 			int * realizationMatrix,
 			struct gaussianModelRealization * model);
 
@@ -321,11 +323,13 @@ void gaussianVariationalBayesSpikeRegression(double * eps,
 			int * approx,
 			int * totalModelFits,
 			double * penalizedDataMatrix,
+			double * unpenalizedDataMatrix,
 			double * responseVariable,
 			double * responseVariance,
 			int * numberSamples,
 			int * numberPenalizedFeatures,
-			int * ordering_mat,
+			int * numberUnpenalizedFeatures,
+			int * realizationMatrix,
 			double * betaMuResult,
 			double * betaSigmaSquaredResult,
 			double * expectationBetaResult,

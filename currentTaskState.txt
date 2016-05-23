@@ -123,10 +123,15 @@ Further code clean up.  Need to diagram all dependency structures between .h, .c
 1) strings from R to C (for complicated control parameters)
 2) necessary library, data structure, and function calls to do least squares operations.  Precompute xhat matrix? - it's all in the blas sub routines.
 2) add alpha update functions, parameters, structs, etc...
-4) rewrite identify unique models using hashing after applying an absolute value function - use openssl library implementation of md5 function
+4) rewrite identify unique models using hashing after applying a precision level rounding
 5) rewrite collapse Results to reflect new model results (need to figure out how to handle the case of returning every model - BMA, Maximal, and Complete, which is the hardest one to figure out)
 6) audit each function (e.g. make sure all the inputs are correct between .c/.h/.R)
 7) remove BMA covariance correction (for now)
+
+March 16, 2016
+working on passing strings to C
+contemplating doing everything with .Call instead
+alternatively, would like to make it a very general and portable library...
 
 May 22, 2016
 Notes: some code is stored in testProject.rproj for testing the precompiled fortran methods to be used in the code
