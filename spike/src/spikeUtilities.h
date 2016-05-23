@@ -21,9 +21,19 @@ void scaleVector(int n,double * vector, double alpha);
 void standardizeVector(double * vector,double * onesVector,int n);
 
 //cor -> correlation
-void correlation(double * vector1, double * vector2, double * onesVector,double * result,int n);
+void correlation(double * vector1, double * vector2, double * onesVector, double * result, int n);
 
 //compute_ssq -> vectorSumOfSquares
-double vectorSumOfSquares(double * vector,int n);
+double vectorSumOfSquares(double * vector, int n);
 
-//define all wrapper functions that will do other matrix/vector operations.
+//matrix vector product
+void matrixVectorProduct(int n, double * matrix, double * inputVector, double * result);
+
+//cholesky decomposition
+void matrixCholeskyDecomposition(int n, double * matrix, double * result);
+
+//inverse given cholesky decomposition
+void matrixInverse(int n, double * cholesky, double * result);
+
+//matrix product
+void matrixMatrixProduct(int n, double * matrix1, double * result);

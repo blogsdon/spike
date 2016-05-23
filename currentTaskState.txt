@@ -127,3 +127,19 @@ Further code clean up.  Need to diagram all dependency structures between .h, .c
 5) rewrite collapse Results to reflect new model results (need to figure out how to handle the case of returning every model - BMA, Maximal, and Complete, which is the hardest one to figure out)
 6) audit each function (e.g. make sure all the inputs are correct between .c/.h/.R)
 7) remove BMA covariance correction (for now)
+
+May 22, 2016
+Notes: some code is stored in testProject.rproj for testing the precompiled fortran methods to be used in the code
+
+1) strings from R to C (this should be in testProject.R).  Use this to update all control parameters to be passed that are more complicated
+2) alpha updates
+   a) predicated on getting blas functions to work for matrix inversion, etc...
+3) unique model function
+  a) hashing to determine model state and if it is unique
+4) collapse results needs to be rewritten to capture bma, maximal, and complete
+5) remove bma covariance correction
+6) function audit
+  a) headers and declarations are same (.h/.c)
+  b) all parameters are passed correctly between all functions
+7) build and test against vbsr_0.0.7 c and r implementations
+  a) use the testhat package? maybe
