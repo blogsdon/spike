@@ -67,7 +67,8 @@ vbsrRgpu <- function(y,
     modelState$entropy <- 0
     
     #variable to track the state of the fixed effect estimates
-    modelState$alpha <- rep(0,p)
+    alpha <- rep(0,p)
+    modelState$alpha <- gpuR::vclMatrix(alpha,p,1)
     
     #variable to strack the state of the error variance parameter
     modelState$sigma <- 1
@@ -83,10 +84,11 @@ vbsrRgpu <- function(y,
     
     #residual vector
     #modelState$residuals <- y
-    modelState$residuals <- gpuR::vclVector(y,n)
+    modelState$residuals <- gpuR::vclMatrix(y,n,1)
     
+        
     #sum of squares
-    modelState$xSumSquares <- colSums(modelState$x^2)
+    modelState$xSumSquares <- colSums(x^2)
     
     #y - outcome vector
     modelState$y <- y
@@ -152,9 +154,9 @@ vbsrRgpu <- function(y,
       modelState$psums <- modelState$psums + pj
       
       #entropy
-      if(pj > 1-1e-10){
+      if(pj[1] > 1-1e-10){
         modelState$entropy <- modelState$entropy - pj*log(pj) + (1-pj) + 0.5*pj*log(2*exp(1)*pi*sigmaj)
-      }else if (pj < 1e-10){
+      }else if (pj[1] < 1e-10){
         modelState$entropy <- modelState$entropy + pj - (1-pj)*log(1-pj) + 0.5*pj*log(2*exp(1)*pi*sigmaj)
       }else {
         modelState$entropy <- modelState$entropy - pj*log(pj) - (1-pj)*log(1-pj) + 0.5*pj*log(2*exp(1)*pi*sigmaj)
@@ -164,14 +166,18 @@ vbsrRgpu <- function(y,
       modelState$vsums_correct <- modelState$vsums_correct + (ebetaj^2-ebetajsq)*modelState$xSumSquares[j]
   
       #update residuals
-      modelState$residuals <- modelState$residuals + modelState$x[,j]*(modelState$ebeta[j]-ebetaj)
+      modelState$residuals <- modelState$residuals + gpuR::block(modelState$x,
+                                                                 rowStart = as.integer(1),
+                                                                 rowEnd = modelState$n,
+                                                                 colStart=j,
+                                                                 colEnd=j)*(modelState$ebeta[j]-ebetaj[1])
       
       #set beta paramters
-      modelState$ebeta[j] <- ebetaj
-      modelState$ebetasq[j] <- ebetajsq
-      modelState$betamu[j] <- muj
-      modelState$betasigma[j] <- sigmaj
-      modelState$pbeta[j] <- pj
+      modelState$ebeta[j] <- ebetaj[1]
+      modelState$ebetasq[j] <- ebetajsq[1]
+      modelState$betamu[j] <- muj[1]
+      modelState$betasigma[j] <- sigmaj[1]
+      modelState$pbeta[j] <- pj[1]
       
     }
     
@@ -203,7 +209,8 @@ vbsrRgpu <- function(y,
     #sigma <- sum(modelState$residuals^2)/modelState$n
     
     #FLAG FOR GPU OPTIMIZATION
-    sigma <- t(modelState$residuals)%*%modelState$residuals
+    #sigma <- t(modelState$residuals)%*%modelState$residuals
+    sigma <- sum(modelState$residuals^2)
     sigma <- sigma - modelState$vsums_correct
     sigma <- sigma/modelState$n
     
@@ -234,7 +241,7 @@ vbsrRgpu <- function(y,
   
   modelState <- initializeModelState(n,m,p,l0,eps,y,x,z)
   lbold <- -Inf
-  while(abs(modelState$lowerBound-lbold) > modelState$eps ){
+  while(abs(modelState$lowerBound[1]-lbold[1]) > modelState$eps & modelState$iteration < 3){
     
     modelState$psums <- 0
     modelState$vsums_correct <- 0
@@ -257,7 +264,7 @@ vbsrRgpu <- function(y,
     modelState$iteration <- modelState$iteration + 1
     
     #if(modelState$iteration%%10==0){
-    #  cat('iteration:',modelState$iteration,'\n')
+      cat('iteration:',modelState$iteration,'\n')
     #}
   }
   

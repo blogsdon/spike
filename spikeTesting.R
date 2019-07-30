@@ -10,8 +10,12 @@ beta[tbeta]<- rnorm(ntrue,0,2)
 y <- X%*%beta+e
 set.seed(1)
 resC<- spike::vbsr(y,scale(X),family='normal',n_orderings=1,eps = 1e-8,scaling = F)
+
 resR <- spike::vbsrR(y=y,x=scale(X),eps=1e-8,l0 = resC$l0)
+profvis::profvis({resR <- spike::vbsrR(y=y,x=scale(X),eps=1e-8,l0 = resC$l0)})
 resOld <- vbsr::vbsr(y,scale(X),family='normal',n_orderings=1,eps=1e-8,scaling=F)
+resgpu <- profvis::profvis({spike::vbsrRgpu(y,scale(X),eps=1e-8,l0=resC$l0,gpuContex=1)})
+
 resC$e_beta[-1][1:4]
 
 resR$ebeta[1:4]
