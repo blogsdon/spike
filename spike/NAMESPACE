@@ -1,2 +1,2 @@
 useDynLib("spike")
-export(compute_KL,vbsr,stochasticEMSpike,vbsrR)
+export(compute_KL,vbsr,stochasticEMSpike,vbsrR,vbsrRgpu,vbsrBootstrap,fastlmbeta2)

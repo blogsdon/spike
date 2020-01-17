@@ -1,13 +1,17 @@
-vbsrR <- function(y,
+vbsrRgpu <- function(y,
                   x,
                   z=NULL,
                   l0 = -1.545509,
                   eps = 1e-4,
-                  seed=1){
+                  seed=1,
+                  gpuContext = 0){
   ###y = outcomes
   ###x = design matrix
   ###l0 = logit transfomred prior probability of being non-zero
   ###model <- list
+  
+  #set context given setup of system
+  gpuR::setContext(id = gpuContext)
   
   #seed default random seed to control behavior
   set.seed(seed)
@@ -63,7 +67,8 @@ vbsrR <- function(y,
     modelState$entropy <- 0
     
     #variable to track the state of the fixed effect estimates
-    modelState$alpha <- rep(0,p)
+    alpha <- rep(0,p)
+    modelState$alpha <- gpuR::vclMatrix(alpha,p,1)
     
     #variable to strack the state of the error variance parameter
     modelState$sigma <- 1
@@ -78,19 +83,23 @@ vbsrR <- function(y,
     modelState$lowerBound <- 0
     
     #residual vector
-    modelState$residuals <- y
+    #modelState$residuals <- y
+    modelState$residuals <- gpuR::vclMatrix(y,n,1)
     
+        
     #sum of squares
-    modelState$xSumSquares <- apply(x^2,2,sum)
+    modelState$xSumSquares <- colSums(x^2)
     
     #y - outcome vector
     modelState$y <- y
     
     #x - design matrix
-    modelState$x <- x
+    #modelState$x <- x
+    modelState$x <- gpuR::vclMatrix(x,n,m)
     
     #z - covariate matrix
-    modelState$z <- z
+    #modelState$z <- z
+    modelState$z <- gpuR::vclMatrix(z,n,p)
     
     #number of observations
     modelState$n <- n
@@ -119,6 +128,8 @@ vbsrR <- function(y,
     for (j in 1:modelState$m){
       #muj - mean estimate
       
+      
+      #FLAG FOR GPU OPTIMIZATION
       muj <- t(modelState$x[,j])%*%modelState$residuals
       
       muj <- muj + modelState$ebeta[j]*modelState$xSumSquares[j]
@@ -143,9 +154,9 @@ vbsrR <- function(y,
       modelState$psums <- modelState$psums + pj
       
       #entropy
-      if(pj > 1-1e-10){
+      if(pj[1] > 1-1e-10){
         modelState$entropy <- modelState$entropy - pj*log(pj) + (1-pj) + 0.5*pj*log(2*exp(1)*pi*sigmaj)
-      }else if (pj < 1e-10){
+      }else if (pj[1] < 1e-10){
         modelState$entropy <- modelState$entropy + pj - (1-pj)*log(1-pj) + 0.5*pj*log(2*exp(1)*pi*sigmaj)
       }else {
         modelState$entropy <- modelState$entropy - pj*log(pj) - (1-pj)*log(1-pj) + 0.5*pj*log(2*exp(1)*pi*sigmaj)
@@ -155,14 +166,18 @@ vbsrR <- function(y,
       modelState$vsums_correct <- modelState$vsums_correct + (ebetaj^2-ebetajsq)*modelState$xSumSquares[j]
   
       #update residuals
-      modelState$residuals <- modelState$residuals + modelState$x[,j]*(modelState$ebeta[j]-ebetaj)
+      modelState$residuals <- modelState$residuals + gpuR::block(modelState$x,
+                                                                 rowStart = as.integer(1),
+                                                                 rowEnd = modelState$n,
+                                                                 colStart=j,
+                                                                 colEnd=j)*(modelState$ebeta[j]-ebetaj[1])
       
       #set beta paramters
-      modelState$ebeta[j] <- ebetaj
-      modelState$ebetasq[j] <- ebetajsq
-      modelState$betamu[j] <- muj
-      modelState$betasigma[j] <- sigmaj
-      modelState$pbeta[j] <- pj
+      modelState$ebeta[j] <- ebetaj[1]
+      modelState$ebetasq[j] <- ebetajsq[1]
+      modelState$betamu[j] <- muj[1]
+      modelState$betasigma[j] <- sigmaj[1]
+      modelState$pbeta[j] <- pj[1]
       
     }
     
@@ -173,8 +188,12 @@ vbsrR <- function(y,
   #function to update the alpha parameters
   updateAlpha <- function(modelState){
     #get new fixed parameter estimates
+    
+    #FLAG FOR GPU OPTIMIZATION
     alpha <- modelState$Zhat%*%(modelState$residuals+modelState$z%*%modelState$alpha)
     
+    
+    #FLAG FOR GPU OPTIMIZATION
     #update residuals
     modelState$residuals <- modelState$residuals + modelState$z%*%(modelState$alpha-alpha)
     
@@ -188,7 +207,10 @@ vbsrR <- function(y,
   updateError <- function(modelState){
     #generate estimate of error variance
     #sigma <- sum(modelState$residuals^2)/modelState$n
-    sigma <- t(modelState$residuals)%*%modelState$residuals
+    
+    #FLAG FOR GPU OPTIMIZATION
+    #sigma <- t(modelState$residuals)%*%modelState$residuals
+    sigma <- sum(modelState$residuals^2)
     sigma <- sigma - modelState$vsums_correct
     sigma <- sigma/modelState$n
     
@@ -219,7 +241,7 @@ vbsrR <- function(y,
   
   modelState <- initializeModelState(n,m,p,l0,eps,y,x,z)
   lbold <- -Inf
-  while(abs(modelState$lowerBound-lbold) > modelState$eps ){
+  while(abs(modelState$lowerBound[1]-lbold[1]) > modelState$eps & modelState$iteration < 3){
     
     modelState$psums <- 0
     modelState$vsums_correct <- 0

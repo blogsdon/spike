@@ -7,5 +7,6 @@ Author: Benjamin Logsdon
 Maintainer: Benjamin Logsdon <ben.logsdon@sagebase.org>
 Description: Family of algorithms for fitting various feature selection algorithms on high dimensional data.
 License: GPL-2
-Copyright: Benjamin Logsdon 2015
+Copyright: Benjamin Logsdon 2018
 Depends: R (>= 3.2.2)
+Requires: gpuR
