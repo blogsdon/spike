@@ -9,6 +9,8 @@ vbsrBootstrap = function(y,x,nsamp=100,cores=8){
     #library(utilityFunctions)
     #return(utilityFunctions::fastlmbeta(y[shuf],x[shuf,]))
     #library(vbsr)
+    #y=y[shuf]
+    #x=x[shuf,]
     res <- vbsr::vbsr(y[shuf],x[shuf,])
     
     ###identify significant features
@@ -30,13 +32,14 @@ vbsrBootstrap = function(y,x,nsamp=100,cores=8){
     return(baz)
   }
   
-  cl <- parallel::makeCluster(cores)
+  #cl <- parallel::makeCluster(cores)
   #registerDoParallel(cl)
   #betaMatrix <- foreach(i=1:nsamp,.combine='rbind') %dopar% fxn1(replicateMatrix[,i],y,data.matrix(x))
   
   
-  betaMatrix <- t(parallel::parApply(cl,replicateMatrix,2,fxn1,y,data.matrix(x)))
-  parallel::stopCluster(cl)
+  #betaMatrix <- t(parallel::parApply(cl,replicateMatrix,2,fxn1,y,data.matrix(x)))
+  betaMatrix <- t(apply(replicateMatrix,2,fxn1,y,data.matrix(x)))
+  #parallel::stopCluster(cl)
   #colnames(betaMatrix) <- c(colnames(x))
   return(apply(betaMatrix!=0,2,mean))
   #return(betaMatrix)
