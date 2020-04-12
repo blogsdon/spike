@@ -108,7 +108,7 @@ vbsrR <- function(y,
     modelState$eps <- eps
     
     #need to transform l0 into pbeta
-    modelState$pbetaParam <- 1/(1+exp(-0.5*modelState$l0))
+    modelState$pbetaParam <- 1/(1+exp(log(2*pi)*0.5-0.5*modelState$l0))
 
     #return model state    
     return(modelState)

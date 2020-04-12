@@ -1,0 +1,22 @@
+---
+title: "playing around with l-bfgs"
+output: html_notebook
+---
+
+Code up the objective function
+
+```{r}
+sample_mixture <- function(n,mu,sigma,prob){
+  pj <- rbinom(n,1,prob)
+  x <- rep(0,n)
+  x[pj==1]<- rnorm(sum(pj==1),mu,sigma)
+  return(x)
+}
+set.seed(47)
+y<-sample_mixture(10000,0,.5,.5)
+z <- entropy::discretize(y,1000)
+S<-entropy::entropy(z)
+S
+```
+
+
